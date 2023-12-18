@@ -1,7 +1,6 @@
-[gd_scene load_steps=3 format=3 uid="uid://fqkwapjhm27u"]
+[gd_scene load_steps=2 format=3 uid="uid://fqkwapjhm27u"]
 
 [ext_resource type="Script" path="res://addons/playwright/gui/scripts/playwright_gui.gd" id="1_5oo5w"]
-[ext_resource type="PackedScene" uid="uid://05w46te75kd8" path="res://addons/playwright/gui/scenes/playwright_dialogue.tscn" id="2_jy846"]
 
 [node name="PlaywrightGUI" type="Control"]
 layout_mode = 3
@@ -22,11 +21,13 @@ grow_horizontal = 2
 grow_vertical = 2
 size_flags_vertical = 3
 
-[node name="PlaywrightDialogue" parent="PlaywrightGraph" instance=ExtResource("2_jy846")]
-layout_mode = 1
-offset_left = 460.0
-offset_top = 195.0
-offset_right = -836.0
-offset_bottom = -191.0
-mouse_filter = 1
-position_offset = Vector2(460, 195)
+[node name="AddDialogueButton" type="Button" parent="."]
+z_index = 1
+layout_mode = 0
+offset_left = 322.0
+offset_top = 12.0
+offset_right = 433.0
+offset_bottom = 45.0
+text = "Add Dialogue"
+
+[connection signal="pressed" from="AddDialogueButton" to="." method="_on_add_dialogue_button_pressed"]
