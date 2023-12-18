@@ -12,7 +12,6 @@ func _enter_tree():
 	# Hide the main panel by default.
 	_make_visible(false)
 
-
 func _exit_tree():
 	if playwright_gui_inst:
 		playwright_gui_inst.queue_free()

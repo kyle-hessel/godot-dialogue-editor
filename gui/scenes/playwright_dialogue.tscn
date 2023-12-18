@@ -1,0 +1,69 @@
+[gd_scene load_steps=2 format=3 uid="uid://05w46te75kd8"]
+
+[ext_resource type="Script" path="res://addons/playwright/gui/scripts/playwright_dialogue.gd" id="1_b88e8"]
+
+[node name="PlaywrightDialogue" type="GraphNode"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 433.0
+offset_top = 219.0
+offset_right = -1185.0
+offset_bottom = -455.0
+grow_horizontal = 2
+grow_vertical = 2
+resizable = true
+title = "Dialogue"
+slot/0/left_enabled = false
+slot/0/left_type = 0
+slot/0/left_color = Color(1, 1, 1, 1)
+slot/0/left_icon = null
+slot/0/right_enabled = false
+slot/0/right_type = 0
+slot/0/right_color = Color(1, 1, 1, 1)
+slot/0/right_icon = null
+slot/0/draw_stylebox = true
+slot/1/left_enabled = false
+slot/1/left_type = 0
+slot/1/left_color = Color(1, 1, 1, 1)
+slot/1/left_icon = null
+slot/1/right_enabled = false
+slot/1/right_type = 0
+slot/1/right_color = Color(1, 1, 1, 1)
+slot/1/right_icon = null
+slot/1/draw_stylebox = true
+script = ExtResource("1_b88e8")
+
+[node name="DialogueVBox" type="VBoxContainer" parent="."]
+layout_mode = 2
+
+[node name="SpeakerLineEdit" type="LineEdit" parent="DialogueVBox"]
+layout_mode = 2
+placeholder_text = "Speaker"
+
+[node name="DialogueTypeOptionButton" type="OptionButton" parent="DialogueVBox"]
+layout_mode = 2
+item_count = 5
+selected = 0
+allow_reselect = true
+popup/item_0/text = "Default"
+popup/item_0/id = 0
+popup/item_1/text = "Response"
+popup/item_1/id = 1
+popup/item_2/text = "Call"
+popup/item_2/id = 2
+popup/item_3/text = "Message"
+popup/item_3/id = 3
+popup/item_4/text = "Shout"
+popup/item_4/id = 4
+
+[node name="AddLineButton" type="Button" parent="DialogueVBox"]
+layout_mode = 2
+text = "Add Line"
+
+[node name="DialogueTextEdit" type="TextEdit" parent="."]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+
+[connection signal="item_selected" from="DialogueVBox/DialogueTypeOptionButton" to="." method="_on_dialogue_type_option_button_item_selected"]
+[connection signal="pressed" from="DialogueVBox/AddLineButton" to="." method="_on_add_line_button_pressed"]
