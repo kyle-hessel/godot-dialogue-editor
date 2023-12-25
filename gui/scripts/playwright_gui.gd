@@ -29,8 +29,8 @@ func _on_delete_node(dialogue_node: GraphNode) -> void:
 	print(dialogue_node.name)
 	var dialogue_connection_list: Array[Dictionary] = playwright_graph.get_connection_list()
 	
-	for connection in dialogue_connection_list:
+	for connection: Dictionary in dialogue_connection_list:
 		if connection["from_node"] == dialogue_node.name || connection["to_node"] == dialogue_node.name:
-			playwright_graph.disconnect_node(connection["from_node"], 0, connection["to_node"], 0)
+			playwright_graph.disconnect_node(connection["from_node"], connection["from_port"], connection["to_node"], connection["to_port"])
 		
 		dialogue_node.queue_free()
