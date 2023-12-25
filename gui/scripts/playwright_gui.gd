@@ -7,12 +7,16 @@ const PlaywrightDialogue: PackedScene = preload("res://addons/playwright/gui/sce
 @onready var playwright_graph: GraphEdit = $PlaywrightGraph
 @onready var add_dialogue_button: Button = $AddDialogueButton
 
+var dialogue_nodes: Array[GraphNode]
+
 func _enter_tree():
 	pass
 
 func _on_add_dialogue_button_pressed():
 	var playwright_dialogue_inst: GraphNode = PlaywrightDialogue.instantiate()
 	playwright_graph.add_child(playwright_dialogue_inst)
+	dialogue_nodes.append(playwright_dialogue_inst)
+	# hook up each dialogue node's delete_node signal to the local function listed.
 	playwright_dialogue_inst.delete_node.connect(_on_delete_node)
 
 func _on_serialize_dialogue_button_pressed():
@@ -26,8 +30,10 @@ func _on_playwright_graph_disconnection_request(from_node: StringName, from_port
 	playwright_graph.disconnect_node(from_node, from_port, to_node, to_port)
 
 func _on_delete_node(dialogue_node: GraphNode) -> void:
-	print(dialogue_node.name)
+	#print(dialogue_node.name)
 	var dialogue_connection_list: Array[Dictionary] = playwright_graph.get_connection_list()
+	
+	dialogue_nodes.erase(dialogue_node)
 	
 	if !dialogue_connection_list.is_empty():
 		for connection: Dictionary in dialogue_connection_list:
