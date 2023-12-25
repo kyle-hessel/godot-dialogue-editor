@@ -20,6 +20,7 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 size_flags_vertical = 3
+right_disconnects = true
 
 [node name="AddDialogueButton" type="Button" parent="."]
 z_index = 1
@@ -30,4 +31,16 @@ offset_right = 433.0
 offset_bottom = 45.0
 text = "Add Dialogue"
 
+[node name="SerializeDialogueButton" type="Button" parent="."]
+z_index = 1
+layout_mode = 0
+offset_left = 459.0
+offset_top = 12.0
+offset_right = 570.0
+offset_bottom = 45.0
+text = "Serialize Dialogue"
+
+[connection signal="connection_request" from="PlaywrightGraph" to="." method="_on_playwright_graph_connection_request"]
+[connection signal="disconnection_request" from="PlaywrightGraph" to="." method="_on_playwright_graph_disconnection_request"]
 [connection signal="pressed" from="AddDialogueButton" to="." method="_on_add_dialogue_button_pressed"]
+[connection signal="pressed" from="SerializeDialogueButton" to="." method="_on_serialize_dialogue_button_pressed"]
