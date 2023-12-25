@@ -11,7 +11,9 @@ func _enter_tree():
 	pass
 
 func _on_add_dialogue_button_pressed():
-	playwright_graph.add_child(PlaywrightDialogue.instantiate())
+	var playwright_dialogue_inst: GraphNode = PlaywrightDialogue.instantiate()
+	playwright_graph.add_child(playwright_dialogue_inst)
+	playwright_dialogue_inst.delete_node.connect(_on_delete_node)
 
 func _on_serialize_dialogue_button_pressed():
 	var dialogue_connection_list: Array[Dictionary] = playwright_graph.get_connection_list()
@@ -22,3 +24,13 @@ func _on_playwright_graph_connection_request(from_node: StringName, from_port: i
 
 func _on_playwright_graph_disconnection_request(from_node: StringName, from_port: int, to_node: StringName, to_port: int):
 	playwright_graph.disconnect_node(from_node, from_port, to_node, to_port)
+
+func _on_delete_node(dialogue_node: GraphNode) -> void:
+	print(dialogue_node.name)
+	var dialogue_connection_list: Array[Dictionary] = playwright_graph.get_connection_list()
+	
+	for connection in dialogue_connection_list:
+		if connection["from_node"] == dialogue_node.name || connection["to_node"] == dialogue_node.name:
+			playwright_graph.disconnect_node(connection["from_node"], 0, connection["to_node"], 0)
+		
+		dialogue_node.queue_free()

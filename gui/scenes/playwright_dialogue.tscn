@@ -3,6 +3,7 @@
 [ext_resource type="Script" path="res://addons/playwright/gui/scripts/playwright_dialogue.gd" id="1_b88e8"]
 
 [node name="PlaywrightDialogue" type="GraphNode"]
+custom_minimum_size = Vector2(200, 400)
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -15,17 +16,17 @@ grow_vertical = 2
 resizable = true
 title = "Dialogue"
 slot/0/left_enabled = false
-slot/0/left_type = 0
+slot/0/left_type = 1
 slot/0/left_color = Color(1, 1, 1, 1)
 slot/0/left_icon = null
-slot/0/right_enabled = false
-slot/0/right_type = 0
-slot/0/right_color = Color(1, 1, 1, 1)
+slot/0/right_enabled = true
+slot/0/right_type = 1
+slot/0/right_color = Color(0.627451, 0.12549, 0.941176, 1)
 slot/0/right_icon = null
 slot/0/draw_stylebox = true
-slot/1/left_enabled = false
-slot/1/left_type = 0
-slot/1/left_color = Color(1, 1, 1, 1)
+slot/1/left_enabled = true
+slot/1/left_type = 1
+slot/1/left_color = Color(0.627451, 0.12549, 0.941176, 1)
 slot/1/left_icon = null
 slot/1/right_enabled = false
 slot/1/right_type = 0
