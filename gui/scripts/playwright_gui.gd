@@ -24,18 +24,25 @@ func _on_serialize_dialogue_button_pressed():
 	var dialogue_connection_list: Array[Dictionary] = playwright_graph.get_connection_list()
 	print(dialogue_connection_list)
 	
+	# turn every dialogue node into a dialogue resource
 	for dlg_node: GraphNode in dialogue_nodes:
 		var dialogue_res: Dialogue = Dialogue.new()
+		# fill the obvious fields first - speaker and dialogue type.
 		dialogue_res.speaker = dlg_node.speaker_line_edit.text
 		dialogue_res.dialogue_type = dlg_node.dialogue_type_button.selected
 		
+		# loop through each dialogue box
 		for dlg_option: TextEdit in dlg_node.dialogue_options:
 			var lines: Array[String]
+			# loop through each line in each dialogue box.
 			for line: int in dlg_option.get_line_count():
+				# turn each dialogue box into an array of strings.
 				lines.append(dlg_option.get_line(line))
+			# add each dialogue box string array as a nested array for dialogue_options (for branching dialogue).
 			dialogue_res.dialogue_options.append(lines)
 		print(dialogue_res.dialogue_options)
 		
+		# TODO: logic for how to branch dialogue, ties into above.
 		for connection: Dictionary in dialogue_connection_list:
 			if connection["from_node"] == dlg_node.name:
 				pass
@@ -43,12 +50,14 @@ func _on_serialize_dialogue_button_pressed():
 func _on_playwright_graph_connection_request(from_node: StringName, from_port: int, to_node: StringName, to_port: int):
 	playwright_graph.connect_node(from_node, from_port, to_node, to_port)
 	
+	# if the port isn't 0 (for dialogue to dialogue connections) change color.
 	if from_port >= 1 && to_port >= 1:
 		change_node_port_color(to_node, to_port, Color.LIME_GREEN)
 
 func _on_playwright_graph_disconnection_request(from_node: StringName, from_port: int, to_node: StringName, to_port: int):
 	playwright_graph.disconnect_node(from_node, from_port, to_node, to_port)
 	
+	# if the port isn't 0 (for dialogue to dialogue connections) change color back.
 	if from_port >= 1 && to_port >= 1:
 		change_node_port_color(to_node, to_port, Color.ROYAL_BLUE)
 
