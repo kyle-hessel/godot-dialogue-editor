@@ -25,9 +25,16 @@ func _on_serialize_dialogue_button_pressed():
 	print(dialogue_connection_list)
 	
 	for dlg_node: GraphNode in dialogue_nodes:
-		var dialogue_res: Dialogue
+		var dialogue_res: Dialogue = Dialogue.new()
+		dialogue_res.speaker = dlg_node.speaker_line_edit.text
+		dialogue_res.dialogue_type = dlg_node.dialogue_type_button.selected
+		
+		for dlg_option: TextEdit in dlg_node.dialogue_options:
+			print(dlg_option.text)
+		
 		for connection: Dictionary in dialogue_connection_list:
-			pass
+			if connection["from_node"] == dlg_node.name:
+				pass
 
 func _on_playwright_graph_connection_request(from_node: StringName, from_port: int, to_node: StringName, to_port: int):
 	playwright_graph.connect_node(from_node, from_port, to_node, to_port)

@@ -10,10 +10,13 @@ extends GraphNode
 
 signal delete_node(node: GraphNode)
 
+var dialogue_options: Array[TextEdit]
+
 var dialogue_type: Dialogue.DialogueType = Dialogue.DialogueType.DEFAULT
 var slot_index: int = 2
 
 func _ready():
+	dialogue_options.append(dialogue_text_edit)
 	set_slot(0, false, 1, Color.WHITE, true, 1, Color.PURPLE)
 	set_slot(1, true, 1, Color.PURPLE, false, 0, Color.WHITE)
 	set_slot_color_left(slot_index, Color.ROYAL_BLUE)
@@ -41,6 +44,7 @@ func _on_add_line_button_pressed():
 	var new_dialogue_text: TextEdit = dialogue_text_edit.duplicate()
 	new_dialogue_text.text = ""
 	add_child(new_dialogue_text)
+	dialogue_options.append(new_dialogue_text)
 	
 	slot_index += 1
 	#call_deferred("set_slot", true, 0, Color.BLUE, true, 0, Color.RED)
