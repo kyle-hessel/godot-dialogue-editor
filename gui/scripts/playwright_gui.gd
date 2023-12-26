@@ -30,7 +30,11 @@ func _on_serialize_dialogue_button_pressed():
 		dialogue_res.dialogue_type = dlg_node.dialogue_type_button.selected
 		
 		for dlg_option: TextEdit in dlg_node.dialogue_options:
-			print(dlg_option.text)
+			var lines: Array[String]
+			for line: int in dlg_option.get_line_count():
+				lines.append(dlg_option.get_line(line))
+			dialogue_res.dialogue_options.append(lines)
+		print(dialogue_res.dialogue_options)
 		
 		for connection: Dictionary in dialogue_connection_list:
 			if connection["from_node"] == dlg_node.name:
