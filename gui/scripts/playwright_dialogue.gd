@@ -16,8 +16,8 @@ var slot_index: int = 2
 func _ready():
 	set_slot(0, false, 1, Color.WHITE, true, 1, Color.PURPLE)
 	set_slot(1, true, 1, Color.PURPLE, false, 0, Color.WHITE)
-	set_slot_color_left(slot_index, Color.hex(0x4781d1))
-	set_slot_color_right(slot_index, Color.hex(0xb74243))
+	set_slot_color_left(slot_index, Color.ROYAL_BLUE)
+	set_slot_color_right(slot_index, Color.WEB_GREEN)
 
 func _unhandled_input(event: InputEvent):
 	if selected:
