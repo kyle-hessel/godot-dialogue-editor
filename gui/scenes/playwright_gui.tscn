@@ -25,20 +25,28 @@ right_disconnects = true
 [node name="AddDialogueButton" type="Button" parent="."]
 z_index = 1
 layout_mode = 0
-offset_left = 322.0
+offset_left = 553.0
 offset_top = 12.0
-offset_right = 433.0
+offset_right = 664.0
 offset_bottom = 45.0
 text = "Add Dialogue"
 
 [node name="SerializeDialogueButton" type="Button" parent="."]
 z_index = 1
 layout_mode = 0
-offset_left = 459.0
+offset_left = 690.0
 offset_top = 12.0
-offset_right = 570.0
+offset_right = 835.0
 offset_bottom = 45.0
 text = "Serialize Dialogue"
+
+[node name="DialogueNameLineEdit" type="LineEdit" parent="."]
+layout_mode = 0
+offset_left = 309.0
+offset_top = 12.0
+offset_right = 526.0
+offset_bottom = 44.0
+placeholder_text = "Dialogue Name"
 
 [connection signal="connection_request" from="PlaywrightGraph" to="." method="_on_playwright_graph_connection_request"]
 [connection signal="disconnection_request" from="PlaywrightGraph" to="." method="_on_playwright_graph_disconnection_request"]

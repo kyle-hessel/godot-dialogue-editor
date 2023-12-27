@@ -5,6 +5,7 @@ extends Control
 const PlaywrightDialogue: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_dialogue.tscn")
 
 @onready var playwright_graph: GraphEdit = $PlaywrightGraph
+@onready var dialogue_name_line_edit: LineEdit = $DialogueNameLineEdit
 @onready var add_dialogue_button: Button = $AddDialogueButton
 
 var dialogue_nodes: Array[GraphNode]
@@ -57,7 +58,13 @@ func _on_serialize_dialogue_button_pressed():
 				var dlg_to_chain: Dialogue = dlg_res_array[dlg_pos]
 				print("dlg: " + str(dlg_to_chain) + ", end of list.")
 		
-		# TODO: name each resource (I would add something to name the whole chain at the top of the UI), and save to disk with ResourceSaver.
+		# save the first resource in the array to disk as a .tres. each resource afterwards is a nested subresource,
+		# ... so only this is needed for the entire dialogue tree.
+		dlg_res_array[0].resource_name = dialogue_name_line_edit.text
+		var path: String = "res://assets/dialogue/tests/" + dialogue_name_line_edit.text + ".tres"
+		var error: Error = ResourceSaver.save(dlg_res_array[0], path)
+		if error != OK:
+			print(error)
 	
 	# if there isn't a connection list, dialogue nodes do not need to be sorted in any way - just serialize them.
 	else:
@@ -86,19 +93,13 @@ func sort_dialogue_nodes(connection_list: Array[Dictionary]) -> Array[String]:
 		from_nodes.append(dlg_connection["from_node"])
 		to_nodes.append(dlg_connection["to_node"])
 	
-	# determine the starting dialogue node.
+	# determine the starting dialogue node by finding the one that doesn't act as a to_node anywhere.
 	var starting_node_name: String
 	for from_node_name: String in from_nodes:
-		#var from_node_path_str: String = "PlaywrightGraph/" + from_node_name
-		#var from_node: GraphNode = get_node(NodePath(from_node_path_str))
-		
 		var match_found: bool = false
 		for to_node_name: String in to_nodes:
-			#var to_node_path_str: String = "PlaywrightGraph/" + to_node_name
-			#var to_node: GraphNode = get_node(NodePath(to_node_path_str))
 			if from_node_name == to_node_name:
 				match_found = true
-			
 		if !match_found:
 			starting_node_name = from_node_name
 			break
