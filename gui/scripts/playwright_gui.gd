@@ -10,6 +10,8 @@ const PlaywrightDialogue: PackedScene = preload("res://addons/playwright/gui/sce
 var dialogue_nodes: Array[GraphNode]
 var generated_dialogues: Array[Dialogue]
 
+var name_increment: int = 0
+
 func _enter_tree():
 	pass
 
@@ -17,6 +19,8 @@ func _on_add_dialogue_button_pressed():
 	var playwright_dialogue_inst: GraphNode = PlaywrightDialogue.instantiate()
 	playwright_graph.add_child(playwright_dialogue_inst)
 	dialogue_nodes.append(playwright_dialogue_inst)
+	name_increment += 1
+	playwright_dialogue_inst.name = "PlaywrightDialogue" + str(name_increment)
 	# hook up each dialogue node's delete_node signal to the local function listed.
 	playwright_dialogue_inst.delete_node.connect(_on_delete_node)
 
@@ -26,26 +30,34 @@ func _on_serialize_dialogue_button_pressed():
 	
 	# turn every dialogue node into a dialogue resource
 	for dlg_node: GraphNode in dialogue_nodes:
-		var dialogue_res: Dialogue = Dialogue.new()
-		# fill the obvious fields first - speaker and dialogue type.
-		dialogue_res.speaker = dlg_node.speaker_line_edit.text
-		dialogue_res.dialogue_type = dlg_node.dialogue_type_button.selected
-		
-		# loop through each dialogue box
-		for dlg_option: TextEdit in dlg_node.dialogue_options:
-			var lines: Array[String]
-			# loop through each line in each dialogue box.
-			for line: int in dlg_option.get_line_count():
-				# turn each dialogue box into an array of strings.
-				lines.append(dlg_option.get_line(line))
-			# add each dialogue box string array as a nested array for dialogue_options (for branching dialogue).
-			dialogue_res.dialogue_options.append(lines)
-		print(dialogue_res.dialogue_options)
+		var dialogue: Dialogue = transcribe_dialogue_node_to_resource(dlg_node)
 		
 		# TODO: logic for how to branch dialogue, ties into above.
 		for connection: Dictionary in dialogue_connection_list:
-			if connection["from_node"] == dlg_node.name:
-				pass
+			if connection["to_node"] == dlg_node.name:
+				if connection["from_port"] == 0 && connection["to_port"] == 0:
+					print("nested dialogue!")
+					var node_path_str: String = "PlaywrightGraph/" + connection["from_node"]
+					print(get_node(NodePath(node_path_str)))
+
+func transcribe_dialogue_node_to_resource(dlg_node: GraphNode) -> Dialogue:
+	var dialogue_res: Dialogue = Dialogue.new()
+	# fill the obvious fields first - speaker and dialogue type.
+	dialogue_res.speaker = dlg_node.speaker_line_edit.text
+	dialogue_res.dialogue_type = dlg_node.dialogue_type_button.selected
+	
+	# loop through each dialogue box on the node
+	for dlg_option: TextEdit in dlg_node.dialogue_options:
+		var lines: Array[String]
+		# loop through each line in each dialogue box.
+		for line: int in dlg_option.get_line_count():
+			# turn each dialogue box into an array of strings.
+			lines.append(dlg_option.get_line(line))
+		# add each dialogue box string array as a nested array for dialogue_options (for branching dialogue).
+		dialogue_res.dialogue_options.append(lines)
+	print(dialogue_res.dialogue_options)
+	
+	return dialogue_res
 
 func _on_playwright_graph_connection_request(from_node: StringName, from_port: int, to_node: StringName, to_port: int):
 	playwright_graph.connect_node(from_node, from_port, to_node, to_port)
