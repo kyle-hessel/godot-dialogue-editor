@@ -35,15 +35,19 @@ func _on_serialize_dialogue_button_pressed():
 	if dialogue_connection_list.size() > 0:
 		print("Dialogue chain present: sorting dialogue nodes and serializing them.")
 		var sorted_dialogue_node_names: Array[String] = sort_dialogue_nodes(dialogue_connection_list)
-		print(sorted_dialogue_node_names)
+		#print(sorted_dialogue_node_names)
 		
 		# use dialogue node name data to fetch the nodes themselves and transcribe them into an array of dialogue resources.
 		var dlg_res_array: Array[Dialogue]
+		var last_node_name: String = ""
+		
+		var dialogue_line_connections: Array[Dictionary] = filter_dialogue_line_connections(dialogue_connection_list)
 		for node_name: String in sorted_dialogue_node_names:
 			var node_path_str: String = "PlaywrightGraph/" + node_name
 			var dlg_node: GraphNode = get_node(NodePath(node_path_str))
-			var dlg: Resource = transcribe_dialogue_node_to_resource(dlg_node)
+			var dlg: Resource = transcribe_dialogue_nodes_to_resource(dlg_node, last_node_name, dialogue_line_connections)
 			dlg_res_array.append(dlg)
+			last_node_name = dlg_node.name
 		print(dlg_res_array)
 		
 		# chain each dialogue to the next dialogue in its array, unless its the last element. this is a linked list!
@@ -74,6 +78,15 @@ func _on_serialize_dialogue_button_pressed():
 	# turn every dialogue node into a dialogue resource
 	#for dlg_node: GraphNode in dialogue_nodes:
 		#var dialogue: Dialogue = transcribe_dialogue_node_to_resource(dlg_node)
+
+func filter_dialogue_line_connections(connection_list: Array[Dictionary]) -> Array[Dictionary]:
+	# filter for dlg line connections only (any slot but 0).
+	var dialogue_line_connections: Array[Dictionary]
+	for connection: Dictionary in connection_list:
+		if connection["from_port"] != 0 && connection["to_port"] != 0:
+			dialogue_line_connections.append(connection)
+	
+	return dialogue_line_connections
 
 # NOTE: this is a helper function for _on_serialize_dialogue_button_pressed just above.
 # a function that interprets all existing graph node and connection data to extrapolate a sorted array of dialogue node names.
@@ -124,7 +137,7 @@ func traverse_dlg_connection_array(dlg_connections_array: Array[Dictionary], sor
 	else:
 		return sorted_dlg_names
 
-func transcribe_dialogue_node_to_resource(dlg_node: GraphNode) -> Dialogue:
+func transcribe_dialogue_nodes_to_resource(dlg_node: GraphNode, last_node_name: String, dlg_line_connections: Array[Dictionary]) -> Dialogue:
 	var dialogue_res: Dialogue = Dialogue.new()
 	# fill the obvious fields first - speaker and dialogue type.
 	dialogue_res.speaker = dlg_node.speaker_line_edit.text
@@ -141,8 +154,14 @@ func transcribe_dialogue_node_to_resource(dlg_node: GraphNode) -> Dialogue:
 			# add each dialogue box string array as a nested array for dialogue_options (for branching dialogue).
 			dialogue_res.dialogue_options.append(lines)
 		elif dialogue_res.dialogue_type == Dialogue.DialogueType.RESPONSE:
-			# TODO: Implement dialogue option sorting for response transcription.
-			pass
+			# find any connections from the previous node that run to this node.
+			var relevant_connections: Array[Dictionary]
+			for connection: Dictionary in dlg_line_connections:
+				if connection["from_node"] == "last_node_name":
+					relevant_connections.append(connection)
+			
+			for connection: Dictionary in relevant_connections:
+				pass
 		else:
 			# TODO: Implement dialogue option sorting for other dialogue type transcription.
 			pass
