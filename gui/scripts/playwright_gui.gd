@@ -48,7 +48,7 @@ func _on_serialize_dialogue_button_pressed():
 			var dlg: Resource = transcribe_dialogue_nodes_to_resource(dlg_node, last_node_name, dialogue_line_connections)
 			dlg_res_array.append(dlg)
 			last_node_name = dlg_node.name
-		print(dlg_res_array)
+		#print(dlg_res_array)
 		
 		# chain each dialogue to the next dialogue in its array, unless its the last element. this is a linked list!
 		for dlg_pos: int in dlg_res_array.size():
@@ -157,9 +157,10 @@ func transcribe_dialogue_nodes_to_resource(dlg_node: GraphNode, last_node_name: 
 			# find any connections from the previous node that run to this node.
 			var relevant_connections: Array[Dictionary]
 			for connection: Dictionary in dlg_line_connections:
-				if connection["from_node"] == "last_node_name":
+				if connection["from_node"] == last_node_name:
 					relevant_connections.append(connection)
 			
+			print(relevant_connections)
 			for connection: Dictionary in relevant_connections:
 				pass
 		else:
