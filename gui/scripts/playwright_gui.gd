@@ -45,7 +45,7 @@ func _on_serialize_dialogue_button_pressed():
 		for node_name: String in sorted_dialogue_node_names:
 			var node_path_str: String = "PlaywrightGraph/" + node_name
 			var dlg_node: GraphNode = get_node(NodePath(node_path_str))
-			var dlg: Resource = transcribe_dialogue_nodes_to_resource(dlg_node, last_node_name, dialogue_line_connections)
+			var dlg: Resource = transcribe_dialogue_node_to_resource(dlg_node, last_node_name, dialogue_line_connections)
 			dlg_res_array.append(dlg)
 			last_node_name = dlg_node.name
 		#print(dlg_res_array)
@@ -137,7 +137,7 @@ func traverse_dlg_connection_array(dlg_connections_array: Array[Dictionary], sor
 	else:
 		return sorted_dlg_names
 
-func transcribe_dialogue_nodes_to_resource(dlg_node: GraphNode, last_node_name: String, dlg_line_connections: Array[Dictionary]) -> Dialogue:
+func transcribe_dialogue_node_to_resource(dlg_node: GraphNode, last_node_name: String, dlg_line_connections: Array[Dictionary]) -> Dialogue:
 	var dialogue_res: Dialogue = Dialogue.new()
 	# fill the obvious fields first - speaker and dialogue type.
 	dialogue_res.speaker = dlg_node.speaker_line_edit.text
