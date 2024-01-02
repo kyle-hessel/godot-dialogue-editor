@@ -143,29 +143,46 @@ func transcribe_dialogue_nodes_to_resource(dlg_node: GraphNode, last_node_name: 
 	dialogue_res.speaker = dlg_node.speaker_line_edit.text
 	dialogue_res.dialogue_type = dlg_node.dialogue_type_button.selected
 	
-	# loop through each dialogue box on the node
-	for dlg_option: TextEdit in dlg_node.dialogue_options:
-		if dialogue_res.dialogue_type == Dialogue.DialogueType.DEFAULT:
+	if dialogue_res.dialogue_type == Dialogue.DialogueType.DEFAULT:
+		# loop through each dialogue box on the node
+		for dlg_lines: TextEdit in dlg_node.dialogue_options:
 			var lines: Array[String]
 			# loop through each line in each dialogue box.
-			for line: int in dlg_option.get_line_count():
+			for line: int in dlg_lines.get_line_count():
 				# turn each dialogue box into an array of strings.
-				lines.append(dlg_option.get_line(line))
+				lines.append(dlg_lines.get_line(line))
 			# add each dialogue box string array as a nested array for dialogue_options (for branching dialogue).
 			dialogue_res.dialogue_options.append(lines)
-		elif dialogue_res.dialogue_type == Dialogue.DialogueType.RESPONSE:
-			# find any connections from the previous node that run to this node.
-			var relevant_connections: Array[Dictionary]
-			for connection: Dictionary in dlg_line_connections:
-				if connection["from_node"] == last_node_name:
-					relevant_connections.append(connection)
-			
-			print(relevant_connections)
+		
+	elif dialogue_res.dialogue_type == Dialogue.DialogueType.RESPONSE:
+		# find relevant node connections for the given node.
+		var relevant_connections: Array[Dictionary]
+		for connection: Dictionary in dlg_line_connections:
+			if connection["from_node"] == last_node_name:
+				relevant_connections.append(connection)
+		
+		# sort relevant_connections in order of from_port number, ascending.
+		relevant_connections.sort_custom(func(a, b): return a["from_port"] < b["from_port"])
+		print(relevant_connections)
+		
+		# determine number of ports to know how large to size the dialogue_res.dialogue_options array.
+		var port_count: int = 1
+		for connection_idx: int in relevant_connections.size():
+			if connection_idx + 1 < relevant_connections.size():
+				if relevant_connections[connection_idx + 1]["from_port"] != port_count:
+					port_count += 1
+		
+		for port_num: int in port_count:
+			var responses: Array[String]
 			for connection: Dictionary in relevant_connections:
-				pass
-		else:
-			# TODO: Implement dialogue option sorting for other dialogue type transcription.
-			pass
+				if connection["from_port"] == port_num + 1:
+					responses.append(dlg_node.dialogue_options[port_num].text)
+			dialogue_res.dialogue_options.append(responses)
+		
+	else:
+		# TODO: Implement dialogue option sorting for other dialogue type transcription.
+		pass
+	
 	return dialogue_res
 
 func _on_playwright_graph_connection_request(from_node: StringName, from_port: int, to_node: StringName, to_port: int):
