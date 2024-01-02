@@ -172,11 +172,14 @@ func transcribe_dialogue_nodes_to_resource(dlg_node: GraphNode, last_node_name: 
 				if relevant_connections[connection_idx + 1]["from_port"] != port_count:
 					port_count += 1
 		
+		# use the number of ports, the relevant_connections list, and the dialogue node's dialogue_options array
+		# ... to extrapolate how response options are sorted when they are transcribed prior to serialization.
 		for port_num: int in port_count:
+			print(port_num)
 			var responses: Array[String]
 			for connection: Dictionary in relevant_connections:
 				if connection["from_port"] == port_num + 1:
-					responses.append(dlg_node.dialogue_options[port_num].text)
+					responses.append(dlg_node.dialogue_options[connection["to_port"] - 1].text)
 			dialogue_res.dialogue_options.append(responses)
 		
 	else:
