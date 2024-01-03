@@ -48,6 +48,12 @@ offset_right = 541.0
 offset_bottom = 44.0
 placeholder_text = "Dialogue Name"
 
+[node name="DialogueFileDialog" type="FileDialog" parent="."]
+title = "Save Dialogue"
+initial_position = 2
+size = Vector2i(1080, 720)
+ok_button_text = "Save"
+
 [connection signal="connection_request" from="PlaywrightGraph" to="." method="_on_playwright_graph_connection_request"]
 [connection signal="disconnection_request" from="PlaywrightGraph" to="." method="_on_playwright_graph_disconnection_request"]
 [connection signal="pressed" from="AddDialogueButton" to="." method="_on_add_dialogue_button_pressed"]

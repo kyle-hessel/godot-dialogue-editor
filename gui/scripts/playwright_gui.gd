@@ -7,6 +7,9 @@ const PlaywrightDialogue: PackedScene = preload("res://addons/playwright/gui/sce
 @onready var playwright_graph: GraphEdit = $PlaywrightGraph
 @onready var dialogue_name_line_edit: LineEdit = $DialogueNameLineEdit
 @onready var add_dialogue_button: Button = $AddDialogueButton
+@onready var dlg_file_dialog: FileDialog = $DialogueFileDialog
+
+signal file_operation_complete
 
 var dialogue_nodes: Array[GraphNode]
 var generated_dialogues: Array[Dialogue]
@@ -64,14 +67,11 @@ func _on_serialize_dialogue_button_pressed():
 		
 		# save the first resource in the array to disk as a .tres. each resource afterwards is a nested subresource,
 		# ... so only this is needed for the entire dialogue tree.
-		var save_result: Error = save_dialogue_res_to_disk(dlg_res_array[0], dialogue_name_line_edit.text)
-		if save_result != OK:
-			print(save_result)
+		save_dialogue_res_to_disk(dlg_res_array[0], dialogue_name_line_edit.text)
 	
 	# if there isn't a connection list, dialogue nodes do not need to be sorted in any way - just serialize them.
 	else:
 		print("No dialogue chain present, serializing dialogue nodes individually.")
-		# TODO: Implement serialization of unconnected dialogue nodes.
 		var dlg_res_array: Array[Dialogue]
 		for dlg_node: GraphNode in dialogue_nodes:
 			var dlg: Resource = transcribe_dialogue_node_to_resource(dlg_node)
@@ -81,14 +81,41 @@ func _on_serialize_dialogue_button_pressed():
 		for dlg: Resource in dlg_res_array:
 			count_num += 1
 			var res_name: String = dialogue_name_line_edit.text + str(count_num)
-			var save_result: Error = save_dialogue_res_to_disk(dlg, res_name)
-			if save_result != OK:
-				print(save_result)
+			save_dialogue_res_to_disk(dlg, res_name)
+			await file_operation_complete
 
-func save_dialogue_res_to_disk(dlg_res: Dialogue, res_name: String) -> Error:
-	dlg_res.resource_name = res_name
-	var path: String = "res://assets/dialogue/tests/" + res_name + ".tres"
-	return ResourceSaver.save(dlg_res, path)
+func save_dialogue_res_to_disk(dlg_res: Dialogue, res_name: String):
+	var dlg_filename: String = res_name + ".tres"
+	dlg_file_dialog.current_path = dlg_filename
+	
+	var confirmed_func: Callable = func(): 
+		var save_result: Error = ResourceSaver.save(dlg_res, dlg_file_dialog.current_path)
+		
+		if save_result != OK:
+			print(save_result)
+		else:
+			print("File saved!")
+		
+		flush_file_dlg_signals(["confirmed", "canceled"])
+		file_operation_complete.emit()
+	
+	var canceled_func: Callable = func():
+		print("File save aborted.")
+		
+		flush_file_dlg_signals(["confirmed", "canceled"])
+		file_operation_complete.emit()
+	
+	dlg_file_dialog.confirmed.connect(confirmed_func)
+	dlg_file_dialog.canceled.connect(canceled_func)
+	
+	dlg_file_dialog.visible = true
+
+func flush_file_dlg_signals(signals: Array[String]):
+	var decrement: int = 1
+	for sig in signals:
+		var signal_list: Array[Dictionary] = dlg_file_dialog.get_signal_connection_list(sig)
+		dlg_file_dialog.disconnect(sig, signal_list[decrement]["callable"])
+		decrement -= 1 # this may have to change later, but maybe not
 
 func filter_dialogue_line_connections(connection_list: Array[Dictionary]) -> Array[Dictionary]:
 	# filter for dlg line connections only (any slot but 0).
@@ -241,3 +268,4 @@ func _on_delete_node(dialogue_node: GraphNode) -> void:
 			dialogue_node.queue_free()
 	else:
 		dialogue_node.queue_free()
+
