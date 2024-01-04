@@ -68,21 +68,35 @@ func _on_serialize_dialogue_button_pressed():
 		# save the first resource in the array to disk as a .tres. each resource afterwards is a nested subresource,
 		# ... so only this is needed for the entire dialogue tree.
 		save_dialogue_res_to_disk(dlg_res_array[0], dialogue_name_line_edit.text)
+		await file_operation_complete
+		
+		# next, figure out if there are any non-connected dialogue nodes and save them separately.
+		if sorted_dialogue_node_names.size() != dialogue_nodes.size():
+			var floating_dialogues: Array[GraphNode]
+			print("danglers spotted!!")
+			for dlg_node: GraphNode in dialogue_nodes:
+				if sorted_dialogue_node_names.find(dlg_node.name) == -1:
+					floating_dialogues.append(dlg_node)
+			
+			serialize_unconnected_dlg_nodes(floating_dialogues)
 	
 	# if there isn't a connection list, dialogue nodes do not need to be sorted in any way - just serialize them.
 	else:
 		print("No dialogue chain present, serializing dialogue nodes individually.")
-		var dlg_res_array: Array[Dialogue]
-		for dlg_node: GraphNode in dialogue_nodes:
-			var dlg: Resource = transcribe_dialogue_node_to_resource(dlg_node)
-			dlg_res_array.append(dlg)
-		
-		var count_num: int = 0
-		for dlg: Resource in dlg_res_array:
-			count_num += 1
-			var res_name: String = dialogue_name_line_edit.text + str(count_num)
-			save_dialogue_res_to_disk(dlg, res_name)
-			await file_operation_complete
+		serialize_unconnected_dlg_nodes(dialogue_nodes)
+
+func serialize_unconnected_dlg_nodes(dlg_node_array: Array[GraphNode]) -> void:
+	var dlg_res_array: Array[Dialogue]
+	for dlg_node: GraphNode in dlg_node_array:
+		var dlg: Resource = transcribe_dialogue_node_to_resource(dlg_node)
+		dlg_res_array.append(dlg)
+	
+	var count_num: int = 0
+	for dlg: Resource in dlg_res_array:
+		count_num += 1
+		var res_name: String = dialogue_name_line_edit.text + str(count_num)
+		save_dialogue_res_to_disk(dlg, res_name)
+		await file_operation_complete
 
 func save_dialogue_res_to_disk(dlg_res: Dialogue, res_name: String):
 	var dlg_filename: String = res_name + ".tres"
