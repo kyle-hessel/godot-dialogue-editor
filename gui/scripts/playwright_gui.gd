@@ -29,12 +29,9 @@ func _on_add_dialogue_button_pressed():
 	playwright_dialogue_inst.delete_node.connect(_on_delete_node)
 
 func _on_serialize_dialogue_button_pressed():
-	# TODO: Put all of this on a separate thread?
-	
 	var dialogue_connection_list: Array[Dictionary] = playwright_graph.get_connection_list()
 	
 	# if there is a connection list, sort dialogue nodes and then serialize them.
-	# TODO: serialize non-connected dialogue nodes separately?
 	if dialogue_connection_list.size() > 0:
 		print("Dialogue chain present: sorting dialogue nodes and serializing them.")
 		var sorted_dialogue_node_names: Array[String] = sort_dialogue_nodes(dialogue_connection_list)
