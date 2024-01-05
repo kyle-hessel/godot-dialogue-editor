@@ -4,6 +4,9 @@ extends Control
 
 const PlaywrightDialogue: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_dialogue.tscn")
 
+var fs: EditorFileSystem = EditorInterface.get_resource_filesystem()
+var res_prev: EditorResourcePreview = EditorInterface.get_resource_previewer()
+
 @onready var playwright_graph: GraphEdit = $PlaywrightGraph
 @onready var dialogue_name_line_edit: LineEdit = $DialogueNameLineEdit
 @onready var add_dialogue_button: Button = $AddDialogueButton
@@ -99,12 +102,16 @@ func save_dialogue_res_to_disk(dlg_res: Dialogue, res_name: String):
 	var dlg_filename: String = res_name + ".tres"
 	dlg_file_dialog.current_path = dlg_filename
 	
-	var confirmed_func: Callable = func(): 
+	var confirmed_func: Callable = func():
 		var save_result: Error = ResourceSaver.save(dlg_res, dlg_file_dialog.current_path)
 		
 		if save_result != OK:
 			print(save_result)
 		else:
+			fs.scan()
+			fs.update_file(dlg_file_dialog.current_path)
+			res_prev.preview_invalidated.connect(func(path: String): print("I KNEW IT!"))
+			res_prev.check_for_invalidation(dlg_file_dialog.current_path)
 			print("File saved!")
 		
 		flush_file_dlg_signals(["confirmed", "canceled"])
