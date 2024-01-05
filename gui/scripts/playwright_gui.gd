@@ -11,7 +11,6 @@ var res_prev: EditorResourcePreview = EditorInterface.get_resource_previewer()
 @onready var dialogue_name_line_edit: LineEdit = $DialogueNameLineEdit
 @onready var add_dialogue_button: Button = $AddDialogueButton
 @onready var dlg_file_dialog: FileDialog = $DialogueFileDialog
-@onready var graph_file_dialog: FileDialog = $GraphFileDialog # DEPRECATED: remove soon.
 
 signal file_operation_complete
 
@@ -32,12 +31,6 @@ func _on_add_dialogue_button_pressed():
 	playwright_dialogue_inst.name = "PlaywrightDialogue" + str(name_increment)
 	# hook up each dialogue node's delete_node signal to the local function listed.
 	playwright_dialogue_inst.delete_node.connect(_on_delete_node)
-
-# DEPRECATED: remove soon.
-func _on_save_node_graph_button_pressed():
-	var res_name: String = dialogue_name_line_edit.text + "_graph"
-	save_graph_res_to_disk(playwright_graph, res_name)
-	await file_operation_complete
 
 func _on_serialize_dialogue_button_pressed():
 	var dialogue_connection_list: Array[Dictionary] = playwright_graph.get_connection_list()
@@ -105,44 +98,6 @@ func serialize_unconnected_dlg_nodes(dlg_node_array: Array[GraphNode]) -> void:
 		var res_name: String = dialogue_name_line_edit.text + str(count_num)
 		save_dialogue_res_to_disk(dlg, res_name)
 		await file_operation_complete
-
-# DEPRECATED: remove soon.
-func save_graph_res_to_disk(graph: GraphEdit, res_name: String):
-	print("Saving node graph!")
-	var graph_filename: String = res_name + ".tscn"
-	graph_file_dialog.current_path = graph_filename
-	var node_graph_scene: PackedScene = PackedScene.new()
-	
-	for c in graph.get_children():
-		c.set_owner(graph)
-		for ch in c.get_children():
-			ch.set_owner(graph)
-		for chi in c.dialogue_vbox.get_children():
-			chi.set_owner(graph)
-	
-	node_graph_scene.pack(playwright_graph)
-	
-	var confirmed_func: Callable = func():
-		var save_result: Error = ResourceSaver.save(node_graph_scene, graph_file_dialog.current_path)
-		if save_result != OK:
-			print(save_result)
-		else:
-			fs.update_file(graph_file_dialog.current_path)
-			#res_prev.check_for_invalidation(dlg_file_dialog.current_path)
-			print("File saved!")
-		flush_file_dlg_signals(graph_file_dialog, ["confirmed", "canceled"])
-		file_operation_complete.emit()
-	
-	var canceled_func: Callable = func():
-		print("File save aborted.")
-		
-		flush_file_dlg_signals(graph_file_dialog, ["confirmed", "canceled"])
-		file_operation_complete.emit()
-	
-	graph_file_dialog.confirmed.connect(confirmed_func)
-	graph_file_dialog.canceled.connect(canceled_func)
-	
-	graph_file_dialog.visible = true
 
 func save_dialogue_res_to_disk(dlg_res: Dialogue, res_name: String):
 	var dlg_filename: String = res_name + ".tres"
