@@ -21,6 +21,7 @@ var name_increment: int = 0
 
 func _enter_tree():
 	pass
+	#res_prev.preview_invalidated.connect(func(preview_path: String): print("Resource: " + preview_path + " invalidated."))
 
 func _on_add_dialogue_button_pressed():
 	var playwright_dialogue_inst: GraphNode = PlaywrightDialogue.instantiate()
@@ -108,9 +109,9 @@ func save_dialogue_res_to_disk(dlg_res: Dialogue, res_name: String):
 		if save_result != OK:
 			print(save_result)
 		else:
-			fs.scan()
+			# there isn't an easy fix for immediate resource updating upon overwrite, see: https://github.com/godotengine/godot/issues/30302
+			# but, relaunching the editor or sometimes clicking around a bit afterwards does the job.
 			fs.update_file(dlg_file_dialog.current_path)
-			res_prev.preview_invalidated.connect(func(path: String): print("I KNEW IT!"))
 			res_prev.check_for_invalidation(dlg_file_dialog.current_path)
 			print("File saved!")
 		
