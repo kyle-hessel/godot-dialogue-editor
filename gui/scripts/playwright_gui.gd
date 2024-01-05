@@ -11,6 +11,7 @@ var res_prev: EditorResourcePreview = EditorInterface.get_resource_previewer()
 @onready var dialogue_name_line_edit: LineEdit = $DialogueNameLineEdit
 @onready var add_dialogue_button: Button = $AddDialogueButton
 @onready var dlg_file_dialog: FileDialog = $DialogueFileDialog
+@onready var graph_file_dialog: FileDialog = $GraphFileDialog # DEPRECATED: remove soon.
 
 signal file_operation_complete
 
@@ -31,6 +32,12 @@ func _on_add_dialogue_button_pressed():
 	playwright_dialogue_inst.name = "PlaywrightDialogue" + str(name_increment)
 	# hook up each dialogue node's delete_node signal to the local function listed.
 	playwright_dialogue_inst.delete_node.connect(_on_delete_node)
+
+# DEPRECATED: remove soon.
+func _on_save_node_graph_button_pressed():
+	var res_name: String = dialogue_name_line_edit.text + "_graph"
+	save_graph_res_to_disk(playwright_graph, res_name)
+	await file_operation_complete
 
 func _on_serialize_dialogue_button_pressed():
 	var dialogue_connection_list: Array[Dictionary] = playwright_graph.get_connection_list()
@@ -99,6 +106,44 @@ func serialize_unconnected_dlg_nodes(dlg_node_array: Array[GraphNode]) -> void:
 		save_dialogue_res_to_disk(dlg, res_name)
 		await file_operation_complete
 
+# DEPRECATED: remove soon.
+func save_graph_res_to_disk(graph: GraphEdit, res_name: String):
+	print("Saving node graph!")
+	var graph_filename: String = res_name + ".tscn"
+	graph_file_dialog.current_path = graph_filename
+	var node_graph_scene: PackedScene = PackedScene.new()
+	
+	for c in graph.get_children():
+		c.set_owner(graph)
+		for ch in c.get_children():
+			ch.set_owner(graph)
+		for chi in c.dialogue_vbox.get_children():
+			chi.set_owner(graph)
+	
+	node_graph_scene.pack(playwright_graph)
+	
+	var confirmed_func: Callable = func():
+		var save_result: Error = ResourceSaver.save(node_graph_scene, graph_file_dialog.current_path)
+		if save_result != OK:
+			print(save_result)
+		else:
+			fs.update_file(graph_file_dialog.current_path)
+			#res_prev.check_for_invalidation(dlg_file_dialog.current_path)
+			print("File saved!")
+		flush_file_dlg_signals(graph_file_dialog, ["confirmed", "canceled"])
+		file_operation_complete.emit()
+	
+	var canceled_func: Callable = func():
+		print("File save aborted.")
+		
+		flush_file_dlg_signals(graph_file_dialog, ["confirmed", "canceled"])
+		file_operation_complete.emit()
+	
+	graph_file_dialog.confirmed.connect(confirmed_func)
+	graph_file_dialog.canceled.connect(canceled_func)
+	
+	graph_file_dialog.visible = true
+
 func save_dialogue_res_to_disk(dlg_res: Dialogue, res_name: String):
 	var dlg_filename: String = res_name + ".tres"
 	dlg_file_dialog.current_path = dlg_filename
@@ -112,16 +157,16 @@ func save_dialogue_res_to_disk(dlg_res: Dialogue, res_name: String):
 			# there isn't an easy fix for immediate resource updating upon overwrite, see: https://github.com/godotengine/godot/issues/30302
 			# but, relaunching the editor or sometimes clicking around a bit afterwards does the job.
 			fs.update_file(dlg_file_dialog.current_path)
-			res_prev.check_for_invalidation(dlg_file_dialog.current_path)
+			#res_prev.check_for_invalidation(dlg_file_dialog.current_path)
 			print("File saved!")
 		
-		flush_file_dlg_signals(["confirmed", "canceled"])
+		flush_file_dlg_signals(dlg_file_dialog, ["confirmed", "canceled"])
 		file_operation_complete.emit()
 	
 	var canceled_func: Callable = func():
 		print("File save aborted.")
 		
-		flush_file_dlg_signals(["confirmed", "canceled"])
+		flush_file_dlg_signals(dlg_file_dialog, ["confirmed", "canceled"])
 		file_operation_complete.emit()
 	
 	dlg_file_dialog.confirmed.connect(confirmed_func)
@@ -129,11 +174,11 @@ func save_dialogue_res_to_disk(dlg_res: Dialogue, res_name: String):
 	
 	dlg_file_dialog.visible = true
 
-func flush_file_dlg_signals(signals: Array[String]):
+func flush_file_dlg_signals(file_dlg: FileDialog, signals: Array[String]):
 	var decrement: int = 1
 	for sig in signals:
-		var signal_list: Array[Dictionary] = dlg_file_dialog.get_signal_connection_list(sig)
-		dlg_file_dialog.disconnect(sig, signal_list[decrement]["callable"])
+		var signal_list: Array[Dictionary] = file_dlg.get_signal_connection_list(sig)
+		file_dlg.disconnect(sig, signal_list[decrement]["callable"])
 		decrement -= 1 # this may have to change later, but maybe not
 
 func filter_dialogue_line_connections(connection_list: Array[Dictionary]) -> Array[Dictionary]:
@@ -287,4 +332,3 @@ func _on_delete_node(dialogue_node: GraphNode) -> void:
 			dialogue_node.queue_free()
 	else:
 		dialogue_node.queue_free()
-

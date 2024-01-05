@@ -40,6 +40,16 @@ offset_right = 850.0
 offset_bottom = 45.0
 text = "Serialize Dialogue"
 
+[node name="SaveNodeGraphButton" type="Button" parent="."]
+z_index = 1
+layout_mode = 0
+offset_left = 878.0
+offset_top = 12.0
+offset_right = 979.0
+offset_bottom = 45.0
+text = "Save Graph
+"
+
 [node name="DialogueNameLineEdit" type="LineEdit" parent="."]
 layout_mode = 0
 offset_left = 324.0
@@ -54,7 +64,14 @@ initial_position = 2
 size = Vector2i(1080, 720)
 ok_button_text = "Save"
 
+[node name="GraphFileDialog" type="FileDialog" parent="."]
+title = "Save Graph"
+initial_position = 2
+size = Vector2i(1080, 720)
+ok_button_text = "Save"
+
 [connection signal="connection_request" from="PlaywrightGraph" to="." method="_on_playwright_graph_connection_request"]
 [connection signal="disconnection_request" from="PlaywrightGraph" to="." method="_on_playwright_graph_disconnection_request"]
 [connection signal="pressed" from="AddDialogueButton" to="." method="_on_add_dialogue_button_pressed"]
 [connection signal="pressed" from="SerializeDialogueButton" to="." method="_on_serialize_dialogue_button_pressed"]
+[connection signal="pressed" from="SaveNodeGraphButton" to="." method="_on_save_node_graph_button_pressed"]
