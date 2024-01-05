@@ -11,6 +11,7 @@ var res_prev: EditorResourcePreview = EditorInterface.get_resource_previewer()
 @onready var dialogue_name_line_edit: LineEdit = $DialogueNameLineEdit
 @onready var add_dialogue_button: Button = $AddDialogueButton
 @onready var dlg_file_dialog: FileDialog = $DialogueFileDialog
+@onready var import_file_dialog: FileDialog = $ImportFileDialog
 
 signal file_operation_complete
 
@@ -31,6 +32,9 @@ func _on_add_dialogue_button_pressed():
 	playwright_dialogue_inst.name = "PlaywrightDialogue" + str(name_increment)
 	# hook up each dialogue node's delete_node signal to the local function listed.
 	playwright_dialogue_inst.delete_node.connect(_on_delete_node)
+
+func _on_import_dialogue_button_pressed():
+	pass # Replace with function body.
 
 func _on_serialize_dialogue_button_pressed():
 	var dialogue_connection_list: Array[Dictionary] = playwright_graph.get_connection_list()

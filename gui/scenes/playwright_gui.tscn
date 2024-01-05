@@ -64,7 +64,15 @@ initial_position = 2
 size = Vector2i(1080, 720)
 ok_button_text = "Save"
 
+[node name="ImportFileDialog" type="FileDialog" parent="."]
+title = "Import Dialogue(s)"
+initial_position = 2
+size = Vector2i(1080, 720)
+ok_button_text = "Open"
+file_mode = 1
+
 [connection signal="connection_request" from="PlaywrightGraph" to="." method="_on_playwright_graph_connection_request"]
 [connection signal="disconnection_request" from="PlaywrightGraph" to="." method="_on_playwright_graph_disconnection_request"]
 [connection signal="pressed" from="AddDialogueButton" to="." method="_on_add_dialogue_button_pressed"]
 [connection signal="pressed" from="SerializeDialogueButton" to="." method="_on_serialize_dialogue_button_pressed"]
+[connection signal="pressed" from="ImportDialogueButton" to="." method="_on_import_dialogue_button_pressed"]
