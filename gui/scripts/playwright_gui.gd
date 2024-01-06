@@ -17,12 +17,28 @@ signal file_operation_complete
 
 var dialogue_nodes: Array[GraphNode]
 var generated_dialogues: Array[Dialogue]
+var selected_files: Array
 
 var name_increment: int = 0
 
 func _enter_tree():
 	pass
 	#res_prev.preview_invalidated.connect(func(preview_path: String): print("Resource: " + preview_path + " invalidated."))
+
+# use the ready signal of the parent node, as children may instantiate first but not yet have a parent.
+func _on_ready():
+	import_file_dialog.file_selected.connect(
+		func(file_path: String):
+			selected_files.clear()
+			selected_files.append(file_path)
+			print(selected_files)
+	)
+	import_file_dialog.files_selected.connect(
+		func(file_paths: PackedStringArray):
+			selected_files.clear()
+			selected_files = Array(file_paths)
+			print(selected_files)
+	)
 
 func _on_add_dialogue_button_pressed():
 	var playwright_dialogue_inst: GraphNode = PlaywrightDialogue.instantiate()
@@ -34,7 +50,15 @@ func _on_add_dialogue_button_pressed():
 	playwright_dialogue_inst.delete_node.connect(_on_delete_node)
 
 func _on_import_dialogue_button_pressed():
-	pass # Replace with function body.
+	import_file_dialog.visible = true
+
+func import_dialogue_files(files: Array[String]) -> void:
+	print(files)
+	for file: String in files:
+		# TODO: Deserialize dialogue files and recreate the node graph. If this is going to be fully possible,
+		# forcing manual connection_request calls on the playwright_graph and passing in node connections after
+		# all of the nodes are instantiated may be the way to go.
+		pass
 
 func _on_serialize_dialogue_button_pressed():
 	var dialogue_connection_list: Array[Dictionary] = playwright_graph.get_connection_list()
