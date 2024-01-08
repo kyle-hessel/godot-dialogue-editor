@@ -41,6 +41,9 @@ func _on_dialogue_type_option_button_item_selected(index: int):
 			add_line_button.text = "Add Other"
 
 func _on_add_line_button_pressed():
+	add_dialogue_text()
+
+func add_dialogue_text() -> void:
 	var new_dialogue_text: TextEdit = dialogue_text_edit.duplicate()
 	new_dialogue_text.text = ""
 	add_child(new_dialogue_text)

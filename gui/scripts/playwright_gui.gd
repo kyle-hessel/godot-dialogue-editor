@@ -31,34 +31,55 @@ func _on_ready():
 		func(file_path: String):
 			selected_files.clear()
 			selected_files.append(file_path)
-			print(selected_files)
+			import_dialogue_files(selected_files)
 	)
 	import_file_dialog.files_selected.connect(
 		func(file_paths: PackedStringArray):
 			selected_files.clear()
 			selected_files = Array(file_paths)
-			print(selected_files)
+			import_dialogue_files(selected_files)
 	)
 
 func _on_add_dialogue_button_pressed():
+	dialogue_nodes.append(instantiate_dialogue_node())
+
+func _on_import_dialogue_button_pressed():
+	import_file_dialog.visible = true
+
+func instantiate_dialogue_node() -> GraphNode:
 	var playwright_dialogue_inst: GraphNode = PlaywrightDialogue.instantiate()
 	playwright_graph.add_child(playwright_dialogue_inst)
 	dialogue_nodes.append(playwright_dialogue_inst)
 	name_increment += 1
 	playwright_dialogue_inst.name = "PlaywrightDialogue" + str(name_increment)
-	# hook up each dialogue node's delete_node signal to the local function listed.
 	playwright_dialogue_inst.delete_node.connect(_on_delete_node)
+	return playwright_dialogue_inst
 
-func _on_import_dialogue_button_pressed():
-	import_file_dialog.visible = true
-
-func import_dialogue_files(files: Array[String]) -> void:
-	print(files)
-	for file: String in files:
+func import_dialogue_files(file_paths: Array) -> void:
+	print(file_paths)
+	var temp_dlg_node_array: Array[GraphNode]
+	for file_path: String in file_paths:
+		var dlg_res: Dialogue = load(file_path)
 		# TODO: Deserialize dialogue files and recreate the node graph. If this is going to be fully possible,
 		# forcing manual connection_request calls on the playwright_graph and passing in node connections after
 		# all of the nodes are instantiated may be the way to go.
-		pass
+		var dlg_node_inst: GraphNode = instantiate_dialogue_node()
+		dialogue_nodes.append(dlg_node_inst)
+		temp_dlg_node_array.append(dlg_node_inst)
+		
+		dlg_node_inst.speaker_line_edit.text = dlg_res.speaker
+		dlg_node_inst.dialogue_type_button.selected = dlg_res.dialogue_type
+		
+		if dlg_res.dialogue_type == Dialogue.DialogueType.DEFAULT:
+			var boxes_needed: int = dlg_res.dialogue_options.size() - 1
+			for num: int in boxes_needed:
+				dlg_node_inst.add_dialogue_text()
+			
+			for dlg_option in dlg_res.dialogue_options:
+				pass
+		elif dlg_res.dialogue_type == Dialogue.DialogueType.RESPONSE:
+			for dlg_option in dlg_res.dialogue_options:
+				pass
 
 func _on_serialize_dialogue_button_pressed():
 	var dialogue_connection_list: Array[Dictionary] = playwright_graph.get_connection_list()
