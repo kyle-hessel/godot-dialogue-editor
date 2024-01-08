@@ -71,18 +71,32 @@ func import_dialogue_files(file_paths: Array) -> void:
 		dlg_node_inst.dialogue_type_button.selected = dlg_res.dialogue_type
 		
 		if dlg_res.dialogue_type == Dialogue.DialogueType.DEFAULT:
+			# determine how many TextEdits are needed and instantiate them.
 			var boxes_needed: int = dlg_res.dialogue_options.size() - 1
 			for num: int in boxes_needed:
 				dlg_node_inst.add_dialogue_text()
+			
 			for dlg_num: int in dlg_res.dialogue_options.size():
-				for dlg_line_num: int in dlg_res.dialogue_options[dlg_num].size():
-					if dlg_line_num < dlg_res.dialogue_options[dlg_num].size() - 1:
-						dlg_node_inst.dialogue_options[dlg_num].text += dlg_res.dialogue_options[dlg_num][dlg_line_num] + "\n"
+				var dlg_res_lines: Array = dlg_res.dialogue_options[dlg_num]
+				for dlg_line_num: int in dlg_res_lines.size():
+					var dlg_line: TextEdit = dlg_node_inst.dialogue_options[dlg_num]
+					if dlg_line_num < dlg_res_lines.size() - 1:
+						dlg_line.text += dlg_res_lines[dlg_line_num] + "\n"
 					else:
-						dlg_node_inst.dialogue_options[dlg_num].text += dlg_res.dialogue_options[dlg_num][dlg_line_num]
+						dlg_line.text += dlg_res_lines[dlg_line_num]
+			
 		elif dlg_res.dialogue_type == Dialogue.DialogueType.RESPONSE:
+			var boxes_needed: int = 0
 			for dlg_option in dlg_res.dialogue_options:
-				pass
+				boxes_needed += dlg_option.size()
+			for num: int in boxes_needed - 1:
+				dlg_node_inst.add_dialogue_text()
+			
+			var dlg_pos: int = 0
+			for dlg in dlg_res.dialogue_options:
+				for dlg_line in dlg:
+					dlg_node_inst.dialogue_options[dlg_pos].text = dlg_line
+					dlg_pos += 1
 
 func _on_serialize_dialogue_button_pressed():
 	var dialogue_connection_list: Array[Dictionary] = playwright_graph.get_connection_list()
