@@ -74,9 +74,12 @@ func import_dialogue_files(file_paths: Array) -> void:
 			var boxes_needed: int = dlg_res.dialogue_options.size() - 1
 			for num: int in boxes_needed:
 				dlg_node_inst.add_dialogue_text()
-			
-			for dlg_option in dlg_res.dialogue_options:
-				pass
+			for dlg_num: int in dlg_res.dialogue_options.size():
+				for dlg_line_num: int in dlg_res.dialogue_options[dlg_num].size():
+					if dlg_line_num < dlg_res.dialogue_options[dlg_num].size() - 1:
+						dlg_node_inst.dialogue_options[dlg_num].text += dlg_res.dialogue_options[dlg_num][dlg_line_num] + "\n"
+					else:
+						dlg_node_inst.dialogue_options[dlg_num].text += dlg_res.dialogue_options[dlg_num][dlg_line_num]
 		elif dlg_res.dialogue_type == Dialogue.DialogueType.RESPONSE:
 			for dlg_option in dlg_res.dialogue_options:
 				pass
@@ -125,6 +128,7 @@ func _on_serialize_dialogue_button_pressed():
 			var floating_dialogues: Array[GraphNode]
 			print("danglers spotted!!")
 			for dlg_node: GraphNode in dialogue_nodes:
+				# FIXME: This can throw the following: "Invalid get index 'name' (on base: 'previously freed')."
 				if sorted_dialogue_node_names.find(dlg_node.name) == -1:
 					floating_dialogues.append(dlg_node)
 			
