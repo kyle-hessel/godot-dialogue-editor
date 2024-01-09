@@ -4,6 +4,11 @@ extends Control
 
 const PlaywrightDialogue: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_dialogue.tscn")
 const DLG_OFFSET_INCREMENT: float = 250.0
+const DLG_TYPE_DEFAULT: int = 0
+const DLG_TYPE_RESPONSE: int = 1
+const DLG_TYPE_CALL: int = 2
+const DLG_TYPE_MESSAGE: int = 3
+const DLG_TYPE_SHOUT: int = 4
 
 var fs: EditorFileSystem = EditorInterface.get_resource_filesystem()
 var res_prev: EditorResourcePreview = EditorInterface.get_resource_previewer()
@@ -65,11 +70,40 @@ func import_dialogue_files(file_paths: Array) -> void:
 		# TODO: Deserialize dialogue files and recreate the node graph. If this is going to be fully possible,
 		# forcing manual connection_request calls on the playwright_graph and passing in node connections after
 		# all of the nodes are instantiated may be the way to go.
-		deserialize_dialogue(dlg_res)
+		var dlg_node_array: Array[GraphNode]
+		var dlg_res_array: Array[Dialogue]
+		deserialize_dialogue(dlg_res, dlg_node_array, dlg_res_array)
+		
+		print(dlg_node_array)
+		for node_num: int in dlg_node_array.size():
+			if node_num < dlg_node_array.size() - 1:
+				var current_node: GraphNode = dlg_node_array[node_num]
+				var next_node: GraphNode = dlg_node_array[node_num + 1]
+				playwright_graph.connection_request.emit(StringName(current_node.name), 0, StringName(next_node.name), 0)
+				# TODO: Implement branch collapsing
+				if next_node.dialogue_type_button.selected == DLG_TYPE_DEFAULT:
+					if current_node.dialogue_options.size() == next_node.dialogue_options.size():
+						for text_pos: int in current_node.dialogue_options.size():
+							playwright_graph.connection_request.emit(StringName(current_node.name), text_pos + 1, StringName(next_node.name), text_pos + 1)
+					else:
+						print("Next dialogue node does not have the right amount of slots!")
+					
+				elif next_node.dialogue_type_button.selected == DLG_TYPE_RESPONSE:
+					var slot_pos: int = 0
+					for text_edit_pos: int in current_node.dialogue_options.size():
+						var connection_count: int = dlg_res_array[node_num + 1].dialogue_options[text_edit_pos].size()
+						for con_num: int in connection_count:
+							playwright_graph.connection_request.emit(StringName(current_node.name), text_edit_pos + 1, StringName(next_node.name), slot_pos + 1 + con_num)
+							print("current node: " + str(current_node) + ". " + "slot left: " + str(text_edit_pos + 1) + ", slot right: " + str(slot_pos + 1))
+						slot_pos += connection_count
+				else:
+					pass
 
-func deserialize_dialogue(dlg_res: Dialogue) -> void:
+func deserialize_dialogue(dlg_res: Dialogue, out_node_array: Array[GraphNode], out_res_array: Array[Dialogue]) -> void:
 	var dlg_node_inst: GraphNode = instantiate_dialogue_node()
 	dialogue_nodes.append(dlg_node_inst)
+	out_node_array.append(dlg_node_inst)
+	out_res_array.append(dlg_res)
 	dlg_node_inst.position_offset.x += dlg_offset
 	dlg_offset += DLG_OFFSET_INCREMENT
 	
@@ -105,7 +139,7 @@ func deserialize_dialogue(dlg_res: Dialogue) -> void:
 				dlg_pos += 1
 	
 	if dlg_res.next_dialogue != null:
-		deserialize_dialogue(dlg_res.next_dialogue)
+		deserialize_dialogue(dlg_res.next_dialogue, out_node_array, out_res_array)
 
 func _on_serialize_dialogue_button_pressed():
 	var dialogue_connection_list: Array[Dictionary] = playwright_graph.get_connection_list()
@@ -127,7 +161,6 @@ func _on_serialize_dialogue_button_pressed():
 			var dlg: Resource = transcribe_dialogue_node_to_resource(dlg_node, last_node_name, dialogue_line_connections)
 			dlg_res_array.append(dlg)
 			last_node_name = dlg_node.name
-		#print(dlg_res_array)
 		
 		# chain each dialogue to the next dialogue in its array, unless its the last element. this is a linked list!
 		for dlg_pos: int in dlg_res_array.size():
@@ -149,9 +182,9 @@ func _on_serialize_dialogue_button_pressed():
 		# next, figure out if there are any non-connected dialogue nodes and save them separately.
 		if sorted_dialogue_node_names.size() != dialogue_nodes.size():
 			var floating_dialogues: Array[GraphNode]
-			print("danglers spotted!!")
+			print("Saving separate dialogue nodes.")
 			for dlg_node: GraphNode in dialogue_nodes:
-				# FIXME: This can throw the following: "Invalid get index 'name' (on base: 'previously freed')."
+				# FIXME: This can throw the following in certain instances: "Invalid get index 'name' (on base: 'previously freed')."
 				if sorted_dialogue_node_names.find(dlg_node.name) == -1:
 					floating_dialogues.append(dlg_node)
 			
@@ -276,6 +309,7 @@ func transcribe_dialogue_node_to_resource(dlg_node: GraphNode, last_node_name: S
 	dialogue_res.speaker = dlg_node.speaker_line_edit.text
 	dialogue_res.dialogue_type = dlg_node.dialogue_type_button.selected
 	
+	# TODO: Implement branch collapsing
 	if dialogue_res.dialogue_type == Dialogue.DialogueType.DEFAULT:
 		# loop through each dialogue box on the node
 		for dlg_lines: TextEdit in dlg_node.dialogue_options:

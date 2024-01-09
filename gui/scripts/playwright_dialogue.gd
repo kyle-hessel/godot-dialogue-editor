@@ -12,7 +12,7 @@ signal delete_node(node: GraphNode)
 
 var dialogue_options: Array[TextEdit]
 
-var dialogue_type: Dialogue.DialogueType = Dialogue.DialogueType.DEFAULT
+var dialogue_type: Dialogue.DialogueType = Dialogue.DialogueType.DEFAULT # TODO: Remove this, I think?
 var slot_index: int = 2
 
 func _ready():
@@ -50,5 +50,4 @@ func add_dialogue_text() -> void:
 	dialogue_options.append(new_dialogue_text)
 	
 	slot_index += 1
-	#call_deferred("set_slot", true, 0, Color.BLUE, true, 0, Color.RED)
 	set_slot(slot_index, true, 0, Color.hex(0x4781d1), true, 0, Color.hex(0xb74243))
