@@ -73,6 +73,7 @@ file_mode = 1
 
 [connection signal="ready" from="." to="." method="_on_ready"]
 [connection signal="connection_request" from="PlaywrightGraph" to="." method="_on_playwright_graph_connection_request"]
+[connection signal="connection_to_empty" from="PlaywrightGraph" to="." method="_on_playwright_graph_connection_to_empty"]
 [connection signal="disconnection_request" from="PlaywrightGraph" to="." method="_on_playwright_graph_disconnection_request"]
 [connection signal="pressed" from="AddDialogueButton" to="." method="_on_add_dialogue_button_pressed"]
 [connection signal="pressed" from="SerializeDialogueButton" to="." method="_on_serialize_dialogue_button_pressed"]

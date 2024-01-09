@@ -2,6 +2,7 @@
 # This Control needs Vertical Container Sizing set to Expand. See: https://github.com/godotengine/godot/issues/34497
 extends Control
 
+#region CONSTANTS
 const PlaywrightDialogue: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_dialogue.tscn")
 const DLG_OFFSET_INCREMENT_X: float = 250.0
 const DLG_OFFSET_INCREMENT_Y: float = 500.0
@@ -10,6 +11,7 @@ const DLG_TYPE_RESPONSE: int = 1
 const DLG_TYPE_CALL: int = 2
 const DLG_TYPE_MESSAGE: int = 3
 const DLG_TYPE_SHOUT: int = 4
+#endregion
 
 var fs: EditorFileSystem = EditorInterface.get_resource_filesystem()
 var res_prev: EditorResourcePreview = EditorInterface.get_resource_previewer()
@@ -56,6 +58,12 @@ func _on_add_dialogue_button_pressed():
 
 func _on_import_dialogue_button_pressed():
 	import_file_dialog.visible = true
+
+func _on_playwright_graph_connection_to_empty(from_node: StringName, from_port: int, release_position: Vector2):
+	var dlg_node_inst: GraphNode = instantiate_dialogue_node()
+	dialogue_nodes.append(dlg_node_inst)
+	dlg_node_inst.position_offset = release_position * playwright_graph.zoom * 0.5
+	playwright_graph.connection_request.emit(from_node, 0, StringName(dlg_node_inst.name), 0)
 
 func instantiate_dialogue_node() -> GraphNode:
 	var playwright_dialogue_inst: GraphNode = PlaywrightDialogue.instantiate()
