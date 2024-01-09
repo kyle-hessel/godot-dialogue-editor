@@ -38,6 +38,9 @@ func _enter_tree():
 
 # use the ready signal of the parent node, as children may instantiate first but not yet have a parent.
 func _on_ready():
+	playwright_graph.snapping_enabled = false
+	playwright_graph.show_grid = false
+	
 	# handle ImportFileDialog if one file is selected.
 	import_file_dialog.file_selected.connect(
 		func(file_path: String):
@@ -60,10 +63,11 @@ func _on_import_dialogue_button_pressed():
 	import_file_dialog.visible = true
 
 func _on_playwright_graph_connection_to_empty(from_node: StringName, from_port: int, release_position: Vector2):
-	var dlg_node_inst: GraphNode = instantiate_dialogue_node()
-	dialogue_nodes.append(dlg_node_inst)
-	dlg_node_inst.position_offset = release_position * playwright_graph.zoom * 0.5
-	playwright_graph.connection_request.emit(from_node, 0, StringName(dlg_node_inst.name), 0)
+	if from_port == 0:
+		var dlg_node_inst: GraphNode = instantiate_dialogue_node()
+		dialogue_nodes.append(dlg_node_inst)
+		dlg_node_inst.position_offset = release_position * playwright_graph.zoom * 0.5
+		playwright_graph.connection_request.emit(from_node, 0, StringName(dlg_node_inst.name), 0)
 
 func instantiate_dialogue_node() -> GraphNode:
 	var playwright_dialogue_inst: GraphNode = PlaywrightDialogue.instantiate()
