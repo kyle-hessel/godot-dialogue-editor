@@ -26,7 +26,7 @@ func _unhandled_input(event: InputEvent):
 	if selected:
 		if event is InputEventKey and event.is_pressed():
 			#print(OS.get_keycode_string(event.keycode))
-			if OS.get_keycode_string(event.keycode) == "Kp Period":
+			if OS.get_keycode_string(event.keycode) == "Escape":
 				var playwright_graph: GraphEdit = get_parent()
 				delete_node.emit(self)
 

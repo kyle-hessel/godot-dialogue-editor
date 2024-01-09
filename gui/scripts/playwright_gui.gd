@@ -3,6 +3,7 @@
 extends Control
 
 const PlaywrightDialogue: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_dialogue.tscn")
+const DLG_OFFSET_INCREMENT: float = 250.0
 
 var fs: EditorFileSystem = EditorInterface.get_resource_filesystem()
 var res_prev: EditorResourcePreview = EditorInterface.get_resource_previewer()
@@ -19,6 +20,7 @@ var dialogue_nodes: Array[GraphNode]
 var generated_dialogues: Array[Dialogue]
 var selected_files: Array
 
+var dlg_offset: float = 0
 var name_increment: int = 0
 
 func _enter_tree():
@@ -57,46 +59,53 @@ func instantiate_dialogue_node() -> GraphNode:
 
 func import_dialogue_files(file_paths: Array) -> void:
 	print(file_paths)
-	var temp_dlg_node_array: Array[GraphNode]
+	#var temp_dlg_node_array: Array[GraphNode]
 	for file_path: String in file_paths:
 		var dlg_res: Dialogue = load(file_path)
 		# TODO: Deserialize dialogue files and recreate the node graph. If this is going to be fully possible,
 		# forcing manual connection_request calls on the playwright_graph and passing in node connections after
 		# all of the nodes are instantiated may be the way to go.
-		var dlg_node_inst: GraphNode = instantiate_dialogue_node()
-		dialogue_nodes.append(dlg_node_inst)
-		temp_dlg_node_array.append(dlg_node_inst)
+		deserialize_dialogue(dlg_res)
+
+func deserialize_dialogue(dlg_res: Dialogue) -> void:
+	var dlg_node_inst: GraphNode = instantiate_dialogue_node()
+	dialogue_nodes.append(dlg_node_inst)
+	dlg_node_inst.position_offset.x += dlg_offset
+	dlg_offset += DLG_OFFSET_INCREMENT
+	
+	dlg_node_inst.speaker_line_edit.text = dlg_res.speaker
+	dlg_node_inst.dialogue_type_button.selected = dlg_res.dialogue_type
+	
+	if dlg_res.dialogue_type == Dialogue.DialogueType.DEFAULT:
+		# determine how many TextEdits are needed and instantiate them.
+		var boxes_needed: int = dlg_res.dialogue_options.size() - 1
+		for num: int in boxes_needed:
+			dlg_node_inst.add_dialogue_text()
 		
-		dlg_node_inst.speaker_line_edit.text = dlg_res.speaker
-		dlg_node_inst.dialogue_type_button.selected = dlg_res.dialogue_type
+		for dlg_num: int in dlg_res.dialogue_options.size():
+			var dlg_res_lines: Array = dlg_res.dialogue_options[dlg_num]
+			for dlg_line_num: int in dlg_res_lines.size():
+				var dlg_line: TextEdit = dlg_node_inst.dialogue_options[dlg_num]
+				if dlg_line_num < dlg_res_lines.size() - 1:
+					dlg_line.text += dlg_res_lines[dlg_line_num] + "\n"
+				else:
+					dlg_line.text += dlg_res_lines[dlg_line_num]
 		
-		if dlg_res.dialogue_type == Dialogue.DialogueType.DEFAULT:
-			# determine how many TextEdits are needed and instantiate them.
-			var boxes_needed: int = dlg_res.dialogue_options.size() - 1
-			for num: int in boxes_needed:
-				dlg_node_inst.add_dialogue_text()
-			
-			for dlg_num: int in dlg_res.dialogue_options.size():
-				var dlg_res_lines: Array = dlg_res.dialogue_options[dlg_num]
-				for dlg_line_num: int in dlg_res_lines.size():
-					var dlg_line: TextEdit = dlg_node_inst.dialogue_options[dlg_num]
-					if dlg_line_num < dlg_res_lines.size() - 1:
-						dlg_line.text += dlg_res_lines[dlg_line_num] + "\n"
-					else:
-						dlg_line.text += dlg_res_lines[dlg_line_num]
-			
-		elif dlg_res.dialogue_type == Dialogue.DialogueType.RESPONSE:
-			var boxes_needed: int = 0
-			for dlg_option in dlg_res.dialogue_options:
-				boxes_needed += dlg_option.size()
-			for num: int in boxes_needed - 1:
-				dlg_node_inst.add_dialogue_text()
-			
-			var dlg_pos: int = 0
-			for dlg in dlg_res.dialogue_options:
-				for dlg_line in dlg:
-					dlg_node_inst.dialogue_options[dlg_pos].text = dlg_line
-					dlg_pos += 1
+	elif dlg_res.dialogue_type == Dialogue.DialogueType.RESPONSE:
+		var boxes_needed: int = 0
+		for dlg_option in dlg_res.dialogue_options:
+			boxes_needed += dlg_option.size()
+		for num: int in boxes_needed - 1:
+			dlg_node_inst.add_dialogue_text()
+		
+		var dlg_pos: int = 0
+		for dlg in dlg_res.dialogue_options:
+			for dlg_line in dlg:
+				dlg_node_inst.dialogue_options[dlg_pos].text = dlg_line
+				dlg_pos += 1
+	
+	if dlg_res.next_dialogue != null:
+		deserialize_dialogue(dlg_res.next_dialogue)
 
 func _on_serialize_dialogue_button_pressed():
 	var dialogue_connection_list: Array[Dictionary] = playwright_graph.get_connection_list()
