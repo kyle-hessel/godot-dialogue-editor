@@ -3,7 +3,8 @@
 extends Control
 
 const PlaywrightDialogue: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_dialogue.tscn")
-const DLG_OFFSET_INCREMENT: float = 250.0
+const DLG_OFFSET_INCREMENT_X: float = 250.0
+const DLG_OFFSET_INCREMENT_Y: float = 500.0
 const DLG_TYPE_DEFAULT: int = 0
 const DLG_TYPE_RESPONSE: int = 1
 const DLG_TYPE_CALL: int = 2
@@ -25,7 +26,8 @@ var dialogue_nodes: Array[GraphNode]
 var generated_dialogues: Array[Dialogue]
 var selected_files: Array
 
-var dlg_offset: float = 0
+var dlg_offset_x: float = 0
+var dlg_offset_y: float = 0
 var name_increment: int = 0
 
 func _enter_tree():
@@ -34,12 +36,14 @@ func _enter_tree():
 
 # use the ready signal of the parent node, as children may instantiate first but not yet have a parent.
 func _on_ready():
+	# handle ImportFileDialog if one file is selected.
 	import_file_dialog.file_selected.connect(
 		func(file_path: String):
 			selected_files.clear()
 			selected_files.append(file_path)
 			import_dialogue_files(selected_files)
 	)
+	# handle ImportFileDialog if multiple files are selected.
 	import_file_dialog.files_selected.connect(
 		func(file_paths: PackedStringArray):
 			selected_files.clear()
@@ -63,59 +67,68 @@ func instantiate_dialogue_node() -> GraphNode:
 	return playwright_dialogue_inst
 
 func import_dialogue_files(file_paths: Array) -> void:
-	print(file_paths)
-	#var temp_dlg_node_array: Array[GraphNode]
+	# import every dialogue file that was selected.
 	for file_path: String in file_paths:
+		dlg_offset_x = 0.0
 		var dlg_res: Dialogue = load(file_path)
-		# TODO: Deserialize dialogue files and recreate the node graph. If this is going to be fully possible,
-		# forcing manual connection_request calls on the playwright_graph and passing in node connections after
-		# all of the nodes are instantiated may be the way to go.
+		# Take the loaded dialogue resource and use it to make parallel arrays of dialogue nodes and resources.
 		var dlg_node_array: Array[GraphNode]
 		var dlg_res_array: Array[Dialogue]
 		deserialize_dialogue(dlg_res, dlg_node_array, dlg_res_array)
 		
-		print(dlg_node_array)
-		for node_num: int in dlg_node_array.size():
-			if node_num < dlg_node_array.size() - 1:
-				var current_node: GraphNode = dlg_node_array[node_num]
-				var next_node: GraphNode = dlg_node_array[node_num + 1]
-				playwright_graph.connection_request.emit(StringName(current_node.name), 0, StringName(next_node.name), 0)
-				# TODO: Implement branch collapsing
-				if next_node.dialogue_type_button.selected == DLG_TYPE_DEFAULT:
-					if current_node.dialogue_options.size() == next_node.dialogue_options.size():
-						for text_pos: int in current_node.dialogue_options.size():
-							playwright_graph.connection_request.emit(StringName(current_node.name), text_pos + 1, StringName(next_node.name), text_pos + 1)
+		# if there's more than one dialogue node in the chain during deserialization, determine how to rewire connections between nodes.
+		if dlg_node_array.size() > 1:
+			for node_num: int in dlg_node_array.size():
+				if node_num < dlg_node_array.size() - 1:
+					var current_node: GraphNode = dlg_node_array[node_num]
+					var next_node: GraphNode = dlg_node_array[node_num + 1]
+					# rewire dialogue connections by manually firing GraphEdit's connection_request signal.
+					playwright_graph.connection_request.emit(StringName(current_node.name), 0, StringName(next_node.name), 0)
+					# TODO: Implement branch collapsing, not just one-to-one matches.
+					# for default nodes, just do a one-to-one match for wires (for now).
+					if next_node.dialogue_type_button.selected == DLG_TYPE_DEFAULT:
+						if current_node.dialogue_options.size() == next_node.dialogue_options.size():
+							for text_pos: int in current_node.dialogue_options.size():
+								playwright_graph.connection_request.emit(StringName(current_node.name), text_pos + 1, StringName(next_node.name), text_pos + 1)
+						else:
+							print("Next dialogue node does not have the right amount of slots!")
+					# for response nodes, use array positioning from the resource itself. this is where the parallel arrays come into play.
+					elif next_node.dialogue_type_button.selected == DLG_TYPE_RESPONSE:
+						var slot_pos: int = 0
+						for text_edit_pos: int in current_node.dialogue_options.size():
+							var connection_count: int = dlg_res_array[node_num + 1].dialogue_options[text_edit_pos].size()
+							for con_num: int in connection_count:
+								playwright_graph.connection_request.emit(StringName(current_node.name), text_edit_pos + 1, StringName(next_node.name), slot_pos + 1 + con_num)
+								print("current node: " + str(current_node) + ". " + "slot left: " + str(text_edit_pos + 1) + ", slot right: " + str(slot_pos + 1))
+							slot_pos += connection_count
+					# TODO: Decide how to handle other dialogue types in terms of rewiring nodes.
 					else:
-						print("Next dialogue node does not have the right amount of slots!")
-					
-				elif next_node.dialogue_type_button.selected == DLG_TYPE_RESPONSE:
-					var slot_pos: int = 0
-					for text_edit_pos: int in current_node.dialogue_options.size():
-						var connection_count: int = dlg_res_array[node_num + 1].dialogue_options[text_edit_pos].size()
-						for con_num: int in connection_count:
-							playwright_graph.connection_request.emit(StringName(current_node.name), text_edit_pos + 1, StringName(next_node.name), slot_pos + 1 + con_num)
-							print("current node: " + str(current_node) + ". " + "slot left: " + str(text_edit_pos + 1) + ", slot right: " + str(slot_pos + 1))
-						slot_pos += connection_count
-				else:
-					pass
+						pass
+		
+		dlg_offset_y += DLG_OFFSET_INCREMENT_Y
 
 func deserialize_dialogue(dlg_res: Dialogue, out_node_array: Array[GraphNode], out_res_array: Array[Dialogue]) -> void:
 	var dlg_node_inst: GraphNode = instantiate_dialogue_node()
 	dialogue_nodes.append(dlg_node_inst)
 	out_node_array.append(dlg_node_inst)
 	out_res_array.append(dlg_res)
-	dlg_node_inst.position_offset.x += dlg_offset
-	dlg_offset += DLG_OFFSET_INCREMENT
 	
+	# offset dialogue nodes on the graph so they do not overlap.
+	dlg_node_inst.position_offset.x += dlg_offset_x
+	dlg_node_inst.position_offset.y += dlg_offset_y
+	dlg_offset_x += DLG_OFFSET_INCREMENT_X
+	
+	# deserialize the straightforward information.
 	dlg_node_inst.speaker_line_edit.text = dlg_res.speaker
 	dlg_node_inst.dialogue_type_button.selected = dlg_res.dialogue_type
 	
 	if dlg_res.dialogue_type == Dialogue.DialogueType.DEFAULT:
-		# determine how many TextEdits are needed and instantiate them.
+		# determine how many TextEdits are needed for default dialogue data and instantiate them.
 		var boxes_needed: int = dlg_res.dialogue_options.size() - 1
 		for num: int in boxes_needed:
 			dlg_node_inst.add_dialogue_text()
 		
+		# fill each TextEdit with each string in an array of dialogue lines being on a new line.
 		for dlg_num: int in dlg_res.dialogue_options.size():
 			var dlg_res_lines: Array = dlg_res.dialogue_options[dlg_num]
 			for dlg_line_num: int in dlg_res_lines.size():
@@ -126,18 +139,21 @@ func deserialize_dialogue(dlg_res: Dialogue, out_node_array: Array[GraphNode], o
 					dlg_line.text += dlg_res_lines[dlg_line_num]
 		
 	elif dlg_res.dialogue_type == Dialogue.DialogueType.RESPONSE:
+		# determine how many TextEdits are needed for response dialogue data and instantiate them.
 		var boxes_needed: int = 0
 		for dlg_option in dlg_res.dialogue_options:
 			boxes_needed += dlg_option.size()
 		for num: int in boxes_needed - 1:
 			dlg_node_inst.add_dialogue_text()
 		
+		# make each response occupy its own TextEdit, regardless of whether or not they sit in different nested arrays.
 		var dlg_pos: int = 0
 		for dlg in dlg_res.dialogue_options:
 			for dlg_line in dlg:
 				dlg_node_inst.dialogue_options[dlg_pos].text = dlg_line
 				dlg_pos += 1
 	
+	# if there is a next dialogue, recursively call this function again.
 	if dlg_res.next_dialogue != null:
 		deserialize_dialogue(dlg_res.next_dialogue, out_node_array, out_res_array)
 
