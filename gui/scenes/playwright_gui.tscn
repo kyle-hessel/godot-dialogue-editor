@@ -20,6 +20,8 @@ anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
 size_flags_vertical = 3
+show_grid = false
+snapping_enabled = false
 right_disconnects = true
 
 [node name="AddDialogueButton" type="Button" parent="."]

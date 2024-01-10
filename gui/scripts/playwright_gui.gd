@@ -96,12 +96,16 @@ func import_dialogue_files(file_paths: Array) -> void:
 					var next_node: GraphNode = dlg_node_array[node_num + 1]
 					# rewire dialogue connections by manually firing GraphEdit's connection_request signal.
 					playwright_graph.connection_request.emit(StringName(current_node.name), 0, StringName(next_node.name), 0)
-					# TODO: Implement branch collapsing, not just one-to-one matches.
 					# for default nodes, just do a one-to-one match for wires (for now).
 					if next_node.dialogue_type_button.selected == DLG_TYPE_DEFAULT:
+						# normal branching dialogue rewiring
 						if current_node.dialogue_options.size() == next_node.dialogue_options.size():
 							for text_pos: int in current_node.dialogue_options.size():
 								playwright_graph.connection_request.emit(StringName(current_node.name), text_pos + 1, StringName(next_node.name), text_pos + 1)
+						# dialogue branch collapse rewiring
+						elif next_node.dialogue_options.size() == 1:  #
+							for text_pos: int in current_node.dialogue_options.size():
+								playwright_graph.connection_request.emit(StringName(current_node.name), text_pos + 1, StringName(next_node.name), 1)
 						else:
 							print("Next dialogue node does not have the right amount of slots!")
 					# for response nodes, use array positioning from the resource itself. this is where the parallel arrays come into play.
@@ -337,7 +341,6 @@ func transcribe_dialogue_node_to_resource(dlg_node: GraphNode, last_node_name: S
 	dialogue_res.speaker = dlg_node.speaker_line_edit.text
 	dialogue_res.dialogue_type = dlg_node.dialogue_type_button.selected
 	
-	# TODO: Implement branch collapsing
 	if dialogue_res.dialogue_type == Dialogue.DialogueType.DEFAULT:
 		# loop through each dialogue box on the node
 		for dlg_lines: TextEdit in dlg_node.dialogue_options:
