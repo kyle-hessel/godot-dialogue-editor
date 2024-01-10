@@ -4,7 +4,7 @@ extends Control
 
 #region CONSTANTS
 const PlaywrightDialogue: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_dialogue.tscn")
-const DLG_OFFSET_INCREMENT_X: float = 250.0
+const DLG_OFFSET_INCREMENT_X: float = 300.0
 const DLG_OFFSET_INCREMENT_Y: float = 500.0
 const DLG_TYPE_DEFAULT: int = 0
 const DLG_TYPE_RESPONSE: int = 1
@@ -66,7 +66,10 @@ func _on_playwright_graph_connection_to_empty(from_node: StringName, from_port: 
 	if from_port == 0:
 		var dlg_node_inst: GraphNode = instantiate_dialogue_node()
 		dialogue_nodes.append(dlg_node_inst)
-		dlg_node_inst.position_offset = release_position
+		var from_node_path: String = "PlaywrightGraph/" + String(from_node)
+		var new_node_offset: Vector2 = get_node(NodePath(from_node_path)).position_offset
+		new_node_offset.x += DLG_OFFSET_INCREMENT_X
+		dlg_node_inst.position_offset = new_node_offset
 		playwright_graph.connection_request.emit(from_node, 0, StringName(dlg_node_inst.name), 0)
 
 func instantiate_dialogue_node() -> GraphNode:
