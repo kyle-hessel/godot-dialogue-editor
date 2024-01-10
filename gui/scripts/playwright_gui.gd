@@ -94,32 +94,45 @@ func import_dialogue_files(file_paths: Array) -> void:
 				if node_num < dlg_node_array.size() - 1:
 					var current_node: GraphNode = dlg_node_array[node_num]
 					var next_node: GraphNode = dlg_node_array[node_num + 1]
+					
 					# rewire dialogue connections by manually firing GraphEdit's connection_request signal.
 					playwright_graph.connection_request.emit(StringName(current_node.name), 0, StringName(next_node.name), 0)
-					# for default nodes, just do a one-to-one match for wires (for now).
-					if next_node.dialogue_type_button.selected == DLG_TYPE_DEFAULT:
-						# normal branching dialogue rewiring
-						if current_node.dialogue_options.size() == next_node.dialogue_options.size():
-							for text_pos: int in current_node.dialogue_options.size():
-								playwright_graph.connection_request.emit(StringName(current_node.name), text_pos + 1, StringName(next_node.name), text_pos + 1)
-						# dialogue branch collapse rewiring
-						elif next_node.dialogue_options.size() == 1:  #
-							for text_pos: int in current_node.dialogue_options.size():
-								playwright_graph.connection_request.emit(StringName(current_node.name), text_pos + 1, StringName(next_node.name), 1)
-						else:
-							print("Next dialogue node does not have the right amount of slots!")
-					# for response nodes, use array positioning from the resource itself. this is where the parallel arrays come into play.
-					elif next_node.dialogue_type_button.selected == DLG_TYPE_RESPONSE:
-						var slot_pos: int = 0
-						for text_edit_pos: int in current_node.dialogue_options.size():
-							var connection_count: int = dlg_res_array[node_num + 1].dialogue_options[text_edit_pos].size()
-							for con_num: int in connection_count:
-								playwright_graph.connection_request.emit(StringName(current_node.name), text_edit_pos + 1, StringName(next_node.name), slot_pos + 1 + con_num)
-								print("current node: " + str(current_node) + ". " + "slot left: " + str(text_edit_pos + 1) + ", slot right: " + str(slot_pos + 1))
-							slot_pos += connection_count
-					# TODO: Decide how to handle other dialogue types in terms of rewiring nodes.
+					
+					# if both this node and the next only have one dialogue branch, connecting is simple.
+					if current_node.dialogue_options.size() == 1 && next_node.dialogue_options.size() == 1:
+						playwright_graph.connection_request.emit(StringName(current_node.name), 1, StringName(next_node.name), 1)
+					# otherwise, determine how to proceed based on dialogue type, etc.
 					else:
-						pass
+						# for default nodes, just do a one-to-one match for wires (for now).
+						if next_node.dialogue_type_button.selected == DLG_TYPE_DEFAULT:
+							# normal branching dialogue rewiring going into a default dialogue type
+							if current_node.dialogue_options.size() == next_node.dialogue_options.size():
+								for text_pos: int in current_node.dialogue_options.size():
+									playwright_graph.connection_request.emit(StringName(current_node.name), text_pos + 1, StringName(next_node.name), text_pos + 1)
+							# dialogue branch collapse rewiring
+							elif next_node.dialogue_options.size() == 1:
+								for text_pos: int in current_node.dialogue_options.size():
+									playwright_graph.connection_request.emit(StringName(current_node.name), text_pos + 1, StringName(next_node.name), 1)
+							else:
+								print("Next dialogue node does not have the right amount of slots!")
+						# for response nodes, use array positioning from the resource itself. this is where the parallel arrays come into play.
+						elif next_node.dialogue_type_button.selected == DLG_TYPE_RESPONSE:
+							# normal branching dialogue rewiring going into a response dialogue type
+							if next_node.dialogue_options.size() > 1:
+								var slot_pos: int = 0
+								for text_edit_pos: int in current_node.dialogue_options.size():
+									var connection_count: int = dlg_res_array[node_num + 1].dialogue_options[text_edit_pos].size()
+									for con_num: int in connection_count:
+										playwright_graph.connection_request.emit(StringName(current_node.name), text_edit_pos + 1, StringName(next_node.name), slot_pos + 1 + con_num)
+										print("current node: " + str(current_node) + ". " + "slot left: " + str(text_edit_pos + 1) + ", slot right: " + str(slot_pos + 1))
+									slot_pos += connection_count
+							# dialogue branch collapse rewiring
+							else:
+								for text_pos: int in current_node.dialogue_options.size():
+									playwright_graph.connection_request.emit(StringName(current_node.name), text_pos + 1, StringName(next_node.name), 1)
+						# TODO: Decide how to handle other dialogue types in terms of rewiring nodes.
+						else:
+							pass
 		
 		dlg_offset_y += DLG_OFFSET_INCREMENT_Y
 
