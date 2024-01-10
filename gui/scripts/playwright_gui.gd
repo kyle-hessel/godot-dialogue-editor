@@ -66,7 +66,7 @@ func _on_playwright_graph_connection_to_empty(from_node: StringName, from_port: 
 	if from_port == 0:
 		var dlg_node_inst: GraphNode = instantiate_dialogue_node()
 		dialogue_nodes.append(dlg_node_inst)
-		dlg_node_inst.position_offset = release_position * playwright_graph.zoom * 0.5
+		dlg_node_inst.position_offset = release_position
 		playwright_graph.connection_request.emit(from_node, 0, StringName(dlg_node_inst.name), 0)
 
 func instantiate_dialogue_node() -> GraphNode:
