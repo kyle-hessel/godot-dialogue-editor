@@ -110,6 +110,7 @@ func import_dialogue_files(file_paths: Array) -> void:
 						if next_node.dialogue_type_button.selected == DLG_TYPE_DEFAULT:
 							# normal branching dialogue rewiring going into a default dialogue type
 							if current_node.dialogue_options.size() == next_node.dialogue_options.size():
+								# TODO: Add logic here to check for variable branch lengths (so, endings) before doing one-to-one connections.
 								for text_pos: int in current_node.dialogue_options.size():
 									playwright_graph.connection_request.emit(StringName(current_node.name), text_pos + 1, StringName(next_node.name), text_pos + 1)
 							# dialogue branch collapse rewiring
@@ -371,9 +372,13 @@ func transcribe_dialogue_node_to_resource(dlg_node: GraphNode, last_node_name: S
 	elif dialogue_res.dialogue_type == Dialogue.DialogueType.RESPONSE:
 		# find relevant node connections for the given node.
 		var relevant_connections: Array[Dictionary]
+		var last_node_connection_total: Array[int]
 		for connection: Dictionary in dlg_line_connections:
+			# FIXME: may be able to calculate the below FIXME right here.
 			if connection["from_node"] == last_node_name:
 				relevant_connections.append(connection)
+			if last_node_connection_total.has(connection["from_port"]) == false:
+				last_node_connection_total.append(connection["from_port"])
 		
 		# sort relevant_connections in order of from_port number, ascending.
 		relevant_connections.sort_custom(func(a, b): return a["from_port"] < b["from_port"])
@@ -383,7 +388,10 @@ func transcribe_dialogue_node_to_resource(dlg_node: GraphNode, last_node_name: S
 		var port_count: int = 1
 		for connection_idx: int in relevant_connections.size():
 			if connection_idx + 1 < relevant_connections.size():
-				if relevant_connections[connection_idx + 1]["from_port"] != port_count:
+				# FIXME: Refactor to take into consideration branch endings. Use from_node, and compare the size of its dialogue_options array against how many of those options
+				# ... don't have matching from_port connections in relevant_connections. Tally that up, and subtract that number from port_count before continuing.
+				# I (think) that will work.
+				if last_node_connection_total.size() != port_count:
 					port_count += 1
 		
 		# use the number of ports, the relevant_connections list, and the dialogue node's dialogue_options array
