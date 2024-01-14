@@ -91,6 +91,7 @@ func import_dialogue_files(file_paths: Array) -> void:
 		var dlg_res_array: Array[Dialogue]
 		deserialize_dialogue(dlg_res, dlg_node_array, dlg_res_array)
 		
+		# FIXME: Rewrite this function, starting here.
 		# if there's more than one dialogue node in the chain during deserialization, determine how to rewire connections between nodes.
 		if dlg_node_array.size() > 1:
 			for node_num: int in dlg_node_array.size():
@@ -197,17 +198,21 @@ func _on_serialize_dialogue_button_pressed():
 	if dialogue_connection_list.size() > 0:
 		print("Dialogue chain present: sorting dialogue nodes and serializing them.")
 		var sorted_dialogue_node_names: Array[String] = sort_dialogue_nodes(dialogue_connection_list)
-		#print(sorted_dialogue_node_names)
 		
 		# use dialogue node name data to fetch the nodes themselves and transcribe them into an array of dialogue resources.
 		var dlg_res_array: Array[Dialogue]
 		var last_node_name: String = ""
+		var next_node: GraphNode
 		
 		var dialogue_line_connections: Array[Dictionary] = filter_dialogue_line_connections(dialogue_connection_list)
-		for node_name: String in sorted_dialogue_node_names:
-			var node_path_str: String = "PlaywrightGraph/" + node_name
+		for node_name_pos: int in sorted_dialogue_node_names.size():
+			var node_path_str: String = "PlaywrightGraph/" + sorted_dialogue_node_names[node_name_pos]
 			var dlg_node: GraphNode = get_node(NodePath(node_path_str))
-			var dlg: Resource = transcribe_dialogue_node_to_resource(dlg_node, last_node_name, dialogue_line_connections)
+			if node_name_pos + 1 < sorted_dialogue_node_names.size():
+				next_node = get_node(NodePath("PlaywrightGraph/" + sorted_dialogue_node_names[node_name_pos + 1]))
+			else: 
+				next_node = null
+			var dlg: Resource = transcribe_dialogue_node_to_resource(dlg_node, last_node_name, next_node, dialogue_line_connections)
 			dlg_res_array.append(dlg)
 			last_node_name = dlg_node.name
 		
@@ -352,7 +357,7 @@ func traverse_dlg_connection_array(dlg_connections_array: Array[Dictionary], sor
 	else:
 		return sorted_dlg_names
 
-func transcribe_dialogue_node_to_resource(dlg_node: GraphNode, last_node_name: String = "", dlg_line_connections: Array[Dictionary] = []) -> Dialogue:
+func transcribe_dialogue_node_to_resource(dlg_node: GraphNode, last_node_name: String = "", next_node: GraphNode = null, dlg_line_connections: Array[Dictionary] = []) -> Dialogue:
 	var dialogue_res: Dialogue = Dialogue.new()
 	# fill the obvious fields first - speaker and dialogue type.
 	dialogue_res.speaker = dlg_node.speaker_line_edit.text
@@ -360,21 +365,33 @@ func transcribe_dialogue_node_to_resource(dlg_node: GraphNode, last_node_name: S
 	
 	if dialogue_res.dialogue_type == Dialogue.DialogueType.DEFAULT:
 		# loop through each dialogue box on the node
-		for dlg_lines: TextEdit in dlg_node.dialogue_options:
+		for dlg_lines_pos: int in dlg_node.dialogue_options.size():
 			var lines: Array[String]
 			# loop through each line in each dialogue box.
-			for line: int in dlg_lines.get_line_count():
+			for line: int in dlg_node.dialogue_options[dlg_lines_pos].get_line_count():
 				# turn each dialogue box into an array of strings.
-				lines.append(dlg_lines.get_line(line))
+				lines.append(dlg_node.dialogue_options[dlg_lines_pos].get_line(line))
+			
+			var is_connected_to_something: bool = false
+			for connection: Dictionary in dlg_line_connections:
+				for dlg_option_pos: int in next_node.dialogue_options.size():
+					if playwright_graph.is_node_connected(StringName(dlg_node.name), dlg_lines_pos + 1, StringName(next_node.name), dlg_option_pos + 1):
+						is_connected_to_something = true
+						break
+				if is_connected_to_something:
+					break
+			
+			if !is_connected_to_something:
+				lines[0] = "[end]" + lines[0] + "[/end]"
 			# add each dialogue box string array as a nested array for dialogue_options (for branching dialogue).
 			dialogue_res.dialogue_options.append(lines)
-		
+	
+	# FIXME: Rewrite this function, starting here.
 	elif dialogue_res.dialogue_type == Dialogue.DialogueType.RESPONSE:
 		# find relevant node connections for the given node.
 		var relevant_connections: Array[Dictionary]
 		var last_node_connection_total: Array[int]
 		for connection: Dictionary in dlg_line_connections:
-			# FIXME: may be able to calculate the below FIXME right here.
 			if connection["from_node"] == last_node_name:
 				relevant_connections.append(connection)
 			if last_node_connection_total.has(connection["from_port"]) == false:
@@ -384,24 +401,27 @@ func transcribe_dialogue_node_to_resource(dlg_node: GraphNode, last_node_name: S
 		relevant_connections.sort_custom(func(a, b): return a["from_port"] < b["from_port"])
 		print(relevant_connections)
 		
-		# determine number of ports to know how large to size the dialogue_res.dialogue_options array.
-		var port_count: int = 1
-		for connection_idx: int in relevant_connections.size():
-			if connection_idx + 1 < relevant_connections.size():
-				# FIXME: Refactor to take into consideration branch endings. Use from_node, and compare the size of its dialogue_options array against how many of those options
-				# ... don't have matching from_port connections in relevant_connections. Tally that up, and subtract that number from port_count before continuing.
-				# I (think) that will work.
-				if last_node_connection_total.size() != port_count:
-					port_count += 1
+		var responses: Array[String]
+		# TODO: Write something that fucking works.
+		for connection: Dictionary in relevant_connections:
+			pass
 		
-		# use the number of ports, the relevant_connections list, and the dialogue node's dialogue_options array
-		# ... to extrapolate how response options are sorted when they are transcribed prior to serialization.
-		for port_num: int in port_count:
-			var responses: Array[String]
-			for connection: Dictionary in relevant_connections:
-				if connection["from_port"] == port_num + 1:
-					responses.append(dlg_node.dialogue_options[connection["to_port"] - 1].text)
-			dialogue_res.dialogue_options.append(responses)
+		# DEPRECATED
+		## determine number of ports to know how large to size the dialogue_res.dialogue_options array.
+		#var port_count: int = 1
+		#for connection_idx: int in relevant_connections.size():
+			#if connection_idx + 1 < relevant_connections.size():
+				#if last_node_connection_total.size() != port_count:
+					#port_count += 1
+		#
+		## use the number of ports, the relevant_connections list, and the dialogue node's dialogue_options array
+		## ... to extrapolate how response options are sorted when they are transcribed prior to serialization.
+		#for port_num: int in port_count:
+			#var responses: Array[String]
+			#for connection: Dictionary in relevant_connections:
+				#if connection["from_port"] == port_num + 1:
+					#responses.append(dlg_node.dialogue_options[connection["to_port"] - 1].text)
+			#dialogue_res.dialogue_options.append(responses)
 		
 	else:
 		# TODO: Implement dialogue option sorting for other dialogue type transcription.
