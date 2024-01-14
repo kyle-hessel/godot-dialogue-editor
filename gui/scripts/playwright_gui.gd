@@ -386,7 +386,7 @@ func transcribe_dialogue_node_to_resource(dlg_node: GraphNode, last_node_name: S
 			# add each dialogue box string array as a nested array for dialogue_options (for branching dialogue).
 			dialogue_res.dialogue_options.append(lines)
 	
-	# FIXME: Rewrite this function, starting here.
+	# TODO: Add the above logic for adding [end] tags into this if.
 	elif dialogue_res.dialogue_type == Dialogue.DialogueType.RESPONSE:
 		if dlg_node.dialogue_options.size() == 1:
 			var responses: Array[String]
@@ -406,38 +406,21 @@ func transcribe_dialogue_node_to_resource(dlg_node: GraphNode, last_node_name: S
 			relevant_connections.sort_custom(func(a, b): return a["from_port"] < b["from_port"])
 			print(relevant_connections)
 			
-			# TODO: Write something that fucking works.
+			# determine which ports on the prior node have connections running into the current node, and make an array based off of that.
 			var last_node_connections: Array[int]
 			for connection: Dictionary in relevant_connections:
 				if !last_node_connections.has(connection["from_port"]):
 					last_node_connections.append(connection["from_port"])
+			#print(last_node_connections)
 			
-			print(last_node_connections)
-			
+			# package dialogue response data into nested arrays based on which port from the previous node feeds into them, and them package each array into the dialogue resource.
 			for out_port: int in last_node_connections:
 				var responses: Array[String]
 				for dlg_options_pos: int in dlg_node.dialogue_options.size():
 					if playwright_graph.is_node_connected(StringName(last_node_name), out_port, StringName(dlg_node.name), dlg_options_pos + 1):
 						responses.append(dlg_node.dialogue_options[dlg_options_pos].text)
 				dialogue_res.dialogue_options.append(responses)
-		
-		# DEPRECATED
-		## determine number of ports to know how large to size the dialogue_res.dialogue_options array.
-		#var port_count: int = 1
-		#for connection_idx: int in relevant_connections.size():
-			#if connection_idx + 1 < relevant_connections.size():
-				#if last_node_connection_total.size() != port_count:
-					#port_count += 1
-		#
-		## use the number of ports, the relevant_connections list, and the dialogue node's dialogue_options array
-		## ... to extrapolate how response options are sorted when they are transcribed prior to serialization.
-		#for port_num: int in port_count:
-			#var responses: Array[String]
-			#for connection: Dictionary in relevant_connections:
-				#if connection["from_port"] == port_num + 1:
-					#responses.append(dlg_node.dialogue_options[connection["to_port"] - 1].text)
-			#dialogue_res.dialogue_options.append(responses)
-		
+				
 	else:
 		# TODO: Implement dialogue option sorting for other dialogue type transcription.
 		pass
