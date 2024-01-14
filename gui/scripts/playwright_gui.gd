@@ -388,23 +388,38 @@ func transcribe_dialogue_node_to_resource(dlg_node: GraphNode, last_node_name: S
 	
 	# FIXME: Rewrite this function, starting here.
 	elif dialogue_res.dialogue_type == Dialogue.DialogueType.RESPONSE:
-		# find relevant node connections for the given node.
-		var relevant_connections: Array[Dictionary]
-		var last_node_connection_total: Array[int]
-		for connection: Dictionary in dlg_line_connections:
-			if connection["from_node"] == last_node_name:
-				relevant_connections.append(connection)
-			if last_node_connection_total.has(connection["from_port"]) == false:
-				last_node_connection_total.append(connection["from_port"])
-		
-		# sort relevant_connections in order of from_port number, ascending.
-		relevant_connections.sort_custom(func(a, b): return a["from_port"] < b["from_port"])
-		print(relevant_connections)
-		
-		var responses: Array[String]
-		# TODO: Write something that fucking works.
-		for connection: Dictionary in relevant_connections:
-			pass
+		if dlg_node.dialogue_options.size() == 1:
+			var responses: Array[String]
+			responses.append(dlg_node.dialogue_options[0].text)
+			dialogue_res.dialogue_options.append(responses)
+		else:
+			# find relevant node connections for the given node.
+			var relevant_connections: Array[Dictionary]
+			var last_node_connection_total: Array[int]
+			for connection: Dictionary in dlg_line_connections:
+				if connection["from_node"] == last_node_name:
+					relevant_connections.append(connection)
+				if last_node_connection_total.has(connection["from_port"]) == false:
+					last_node_connection_total.append(connection["from_port"])
+			
+			# sort relevant_connections in order of from_port number, ascending.
+			relevant_connections.sort_custom(func(a, b): return a["from_port"] < b["from_port"])
+			print(relevant_connections)
+			
+			# TODO: Write something that fucking works.
+			var last_node_connections: Array[int]
+			for connection: Dictionary in relevant_connections:
+				if !last_node_connections.has(connection["from_port"]):
+					last_node_connections.append(connection["from_port"])
+			
+			print(last_node_connections)
+			
+			for out_port: int in last_node_connections:
+				var responses: Array[String]
+				for dlg_options_pos: int in dlg_node.dialogue_options.size():
+					if playwright_graph.is_node_connected(StringName(last_node_name), out_port, StringName(dlg_node.name), dlg_options_pos + 1):
+						responses.append(dlg_node.dialogue_options[dlg_options_pos].text)
+				dialogue_res.dialogue_options.append(responses)
 		
 		# DEPRECATED
 		## determine number of ports to know how large to size the dialogue_res.dialogue_options array.
