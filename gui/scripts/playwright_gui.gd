@@ -372,21 +372,11 @@ func transcribe_dialogue_node_to_resource(dlg_node: GraphNode, last_node_name: S
 				# turn each dialogue box into an array of strings.
 				lines.append(dlg_node.dialogue_options[dlg_lines_pos].get_line(line))
 			
-			var is_connected_to_something: bool = false
-			for connection: Dictionary in dlg_line_connections:
-				for dlg_option_pos: int in next_node.dialogue_options.size():
-					if playwright_graph.is_node_connected(StringName(dlg_node.name), dlg_lines_pos + 1, StringName(next_node.name), dlg_option_pos + 1):
-						is_connected_to_something = true
-						break
-				if is_connected_to_something:
-					break
+			# add the [end] tag to any ending branches.
+			lines[0] = append_end_tag_to_string(lines[0], dlg_lines_pos, dlg_node, next_node, dlg_line_connections)
 			
-			if !is_connected_to_something:
-				lines[0] = "[end]" + lines[0] + "[/end]"
-			# add each dialogue box string array as a nested array for dialogue_options (for branching dialogue).
 			dialogue_res.dialogue_options.append(lines)
 	
-	# TODO: Add the above logic for adding [end] tags into this if.
 	elif dialogue_res.dialogue_type == Dialogue.DialogueType.RESPONSE:
 		if dlg_node.dialogue_options.size() == 1:
 			var responses: Array[String]
@@ -411,7 +401,10 @@ func transcribe_dialogue_node_to_resource(dlg_node: GraphNode, last_node_name: S
 			for connection: Dictionary in relevant_connections:
 				if !last_node_connections.has(connection["from_port"]):
 					last_node_connections.append(connection["from_port"])
-			#print(last_node_connections)
+			
+			# add the [end] tag to any ending branches. for response nodes this has to be added to the node text itself for simplicity, and then removed at the end of this elif.
+			for dlg_lines_pos: int in dlg_node.dialogue_options.size():
+				dlg_node.dialogue_options[dlg_lines_pos].text = append_end_tag_to_string(dlg_node.dialogue_options[dlg_lines_pos].text, dlg_lines_pos, dlg_node, next_node, dlg_line_connections)
 			
 			# package dialogue response data into nested arrays based on which port from the previous node feeds into them, and them package each array into the dialogue resource.
 			for out_port: int in last_node_connections:
@@ -420,12 +413,32 @@ func transcribe_dialogue_node_to_resource(dlg_node: GraphNode, last_node_name: S
 					if playwright_graph.is_node_connected(StringName(last_node_name), out_port, StringName(dlg_node.name), dlg_options_pos + 1):
 						responses.append(dlg_node.dialogue_options[dlg_options_pos].text)
 				dialogue_res.dialogue_options.append(responses)
-				
+			
+			# remove the [end] tags from the response dialogue nodes themselves now that the information has been transcribed.
+			for dlg_line: TextEdit in dlg_node.dialogue_options:
+				dlg_line.text = dlg_line.text.replace("[end]", "")
+				dlg_line.text = dlg_line.text.replace("[/end]", "")
 	else:
 		# TODO: Implement dialogue option sorting for other dialogue type transcription.
 		pass
 	
 	return dialogue_res
+
+# NOTE: helper function for the above function, does what it says.
+func append_end_tag_to_string(base_string: String, dlg_lines_pos: int, dlg_node: GraphNode, next_node: GraphNode, dlg_line_connections: Array[Dictionary]) -> String:
+	var is_connected_to_something: bool = false
+	for connection: Dictionary in dlg_line_connections:
+		for dlg_option_pos: int in next_node.dialogue_options.size():
+			if playwright_graph.is_node_connected(StringName(dlg_node.name), dlg_lines_pos + 1, StringName(next_node.name), dlg_option_pos + 1):
+				is_connected_to_something = true
+				break
+		if is_connected_to_something:
+			break
+		
+	if !is_connected_to_something:
+		base_string = "[end]" + base_string + "[/end]"
+	
+	return base_string
 
 func _on_playwright_graph_connection_request(from_node: StringName, from_port: int, to_node: StringName, to_port: int):
 	playwright_graph.connect_node(from_node, from_port, to_node, to_port)
