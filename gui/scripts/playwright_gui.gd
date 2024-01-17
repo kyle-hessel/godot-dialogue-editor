@@ -91,7 +91,6 @@ func import_dialogue_files(file_paths: Array) -> void:
 		var dlg_res_array: Array[Dialogue]
 		deserialize_dialogue(dlg_res, dlg_node_array, dlg_res_array)
 		
-		# FIXME: Rewrite this function, starting here.
 		# if there's more than one dialogue node in the chain during deserialization, determine how to rewire connections between nodes.
 		if dlg_node_array.size() > 1:
 			for node_num: int in dlg_node_array.size():
@@ -109,18 +108,25 @@ func import_dialogue_files(file_paths: Array) -> void:
 					else:
 						# for default nodes, just do a one-to-one match for wires (for now).
 						if next_node.dialogue_type_button.selected == DLG_TYPE_DEFAULT:
-							# normal branching dialogue rewiring going into a default dialogue type
+							# one-to-one branching dialogue rewiring going into a default dialogue type
 							if current_node.dialogue_options.size() == next_node.dialogue_options.size():
 								# TODO: Add logic here to check for variable branch lengths (so, endings) before doing one-to-one connections.
 								for text_pos: int in current_node.dialogue_options.size():
 									playwright_graph.connection_request.emit(StringName(current_node.name), text_pos + 1, StringName(next_node.name), text_pos + 1)
-							# dialogue branch collapse rewiring
-							elif next_node.dialogue_options.size() == 1:
-								for text_pos: int in current_node.dialogue_options.size():
-									playwright_graph.connection_request.emit(StringName(current_node.name), text_pos + 1, StringName(next_node.name), 1)
+							# rewiring if branches are coming to an end on the current node.
+							elif current_node.dialogue_options.size() > next_node.dialogue_options.size():
+								# if the next node only has one option, just collapse every wire into it.
+								if next_node.dialogue_options.size() == 1:
+									for text_pos: int in current_node.dialogue_options.size():
+										playwright_graph.connection_request.emit(StringName(current_node.name), text_pos + 1, StringName(next_node.name), 1)
+								# otherwise, determine which rewires to skip and how to offset the rest.
+								else:
+									# TODO: Write rewiring logic for variable branch endings.
+									pass
 							else:
-								print("Next dialogue node does not have the right amount of slots!")
+								print("The dialogue default node is bigger than the preceding response node.")
 						# for response nodes, use array positioning from the resource itself. this is where the parallel arrays come into play.
+						# TODO: Write rewiring logic for variable branch endings.
 						elif next_node.dialogue_type_button.selected == DLG_TYPE_RESPONSE:
 							# normal branching dialogue rewiring going into a response dialogue type
 							if next_node.dialogue_options.size() > 1:
@@ -131,7 +137,7 @@ func import_dialogue_files(file_paths: Array) -> void:
 										playwright_graph.connection_request.emit(StringName(current_node.name), text_edit_pos + 1, StringName(next_node.name), slot_pos + 1 + con_num)
 										print("current node: " + str(current_node) + ". " + "slot left: " + str(text_edit_pos + 1) + ", slot right: " + str(slot_pos + 1))
 									slot_pos += connection_count
-							# dialogue branch collapse rewiring
+							# rewiring when every branch collapses into one slot on the next node.
 							else:
 								for text_pos: int in current_node.dialogue_options.size():
 									playwright_graph.connection_request.emit(StringName(current_node.name), text_pos + 1, StringName(next_node.name), 1)
