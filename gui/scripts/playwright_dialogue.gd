@@ -8,6 +8,8 @@ extends GraphNode
 @onready var dialogue_text_edit: TextEdit = $DialogueTextEdit
 @onready var next_dialogue_label: Label = $NextDialogueLabel
 
+#var dlg_text_edit_script: Script = preload("res://addons/playwright/gui/scripts/playwright_dialogue_text_edit.gd")
+
 signal delete_node(node: GraphNode)
 
 var dialogue_options: Array[TextEdit]
@@ -46,6 +48,7 @@ func _on_add_line_button_pressed():
 func add_dialogue_text() -> void:
 	var new_dialogue_text: TextEdit = dialogue_text_edit.duplicate()
 	new_dialogue_text.text = ""
+	new_dialogue_text.custom_minimum_size.y = 50
 	add_child(new_dialogue_text)
 	dialogue_options.append(new_dialogue_text)
 	

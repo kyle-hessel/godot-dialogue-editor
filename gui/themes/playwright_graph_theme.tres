@@ -1,3 +1,5 @@
 [gd_resource type="Theme" format=3 uid="uid://d2rww5phkt6cp"]
 
 [resource]
+TextEdit/constants/line_spacing = 4
+TextEdit/font_sizes/font_size = 16

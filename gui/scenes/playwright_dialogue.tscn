@@ -1,6 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://05w46te75kd8"]
+[gd_scene load_steps=4 format=3 uid="uid://05w46te75kd8"]
 
 [ext_resource type="Script" path="res://addons/playwright/gui/scripts/playwright_dialogue.gd" id="1_b88e8"]
+[ext_resource type="Theme" uid="uid://d2rww5phkt6cp" path="res://addons/playwright/gui/themes/playwright_graph_theme.tres" id="1_tt1jy"]
+[ext_resource type="Script" path="res://addons/playwright/gui/scripts/playwright_dialogue_text_edit.gd" id="3_gif4r"]
 
 [node name="PlaywrightDialogue" type="GraphNode"]
 custom_minimum_size = Vector2(200, 400)
@@ -15,6 +17,7 @@ offset_right = 100.0
 offset_bottom = 200.0
 grow_horizontal = 2
 grow_vertical = 2
+theme = ExtResource("1_tt1jy")
 resizable = true
 title = "Dialogue"
 slot/0/left_enabled = false
@@ -81,6 +84,8 @@ text = "Add Line"
 [node name="DialogueTextEdit" type="TextEdit" parent="."]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
+theme = ExtResource("1_tt1jy")
+script = ExtResource("3_gif4r")
 
 [connection signal="item_selected" from="DialogueVBox/DialogueTypeOptionButton" to="." method="_on_dialogue_type_option_button_item_selected"]
 [connection signal="pressed" from="DialogueVBox/AddLineButton" to="." method="_on_add_line_button_pressed"]
