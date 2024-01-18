@@ -128,8 +128,13 @@ func import_dialogue_files(file_paths: Array) -> void:
 						# for response nodes, use array positioning from the resource itself. this is where the parallel arrays come into play.
 						# TODO: Write rewiring logic for variable branch endings.
 						elif next_node.dialogue_type_button.selected == DLG_TYPE_RESPONSE:
-							# normal branching dialogue rewiring going into a response dialogue type
+							# branching dialogue rewiring going into a response dialogue type
 							if next_node.dialogue_options.size() > 1:
+								var branch_end_positions: Array[int]
+								for text_edit_pos: int in current_node.dialogue_options.size():
+									if current_node.dialogue_options[text_edit_pos].text.contains("[end]"):
+										branch_end_positions.append(text_edit_pos)
+								
 								var slot_pos: int = 0
 								for text_edit_pos: int in current_node.dialogue_options.size():
 									var connection_count: int = dlg_res_array[node_num + 1].dialogue_options[text_edit_pos].size()
@@ -137,6 +142,13 @@ func import_dialogue_files(file_paths: Array) -> void:
 										playwright_graph.connection_request.emit(StringName(current_node.name), text_edit_pos + 1, StringName(next_node.name), slot_pos + 1 + con_num)
 										print("current node: " + str(current_node) + ". " + "slot left: " + str(text_edit_pos + 1) + ", slot right: " + str(slot_pos + 1))
 									slot_pos += connection_count
+									
+									var offset_decrement: int = 0
+									for branch_end_pos: int in branch_end_positions:
+										if slot_pos > branch_end_pos:
+											offset_decrement += 1
+									
+									slot_pos -= offset_decrement
 							# rewiring when every branch collapses into one slot on the next node.
 							else:
 								for text_pos: int in current_node.dialogue_options.size():
