@@ -257,9 +257,9 @@ func _on_serialize_dialogue_button_pressed():
 			var floating_dialogues: Array[GraphNode]
 			print("Saving separate dialogue nodes.")
 			for dlg_node: GraphNode in dialogue_nodes:
-				# FIXME: This can throw the following in certain instances: "Invalid get index 'name' (on base: 'previously freed')."
-				if sorted_dialogue_node_names.find(dlg_node.name) == -1:
-					floating_dialogues.append(dlg_node)
+				if dlg_node != null:
+					if sorted_dialogue_node_names.find(dlg_node.name) == -1:
+						floating_dialogues.append(dlg_node)
 			
 			serialize_unconnected_dlg_nodes(floating_dialogues)
 	
