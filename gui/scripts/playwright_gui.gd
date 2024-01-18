@@ -110,7 +110,6 @@ func import_dialogue_files(file_paths: Array) -> void:
 						if next_node.dialogue_type_button.selected == DLG_TYPE_DEFAULT:
 							# one-to-one branching dialogue rewiring going into a default dialogue type
 							if current_node.dialogue_options.size() == next_node.dialogue_options.size():
-								# TODO: Add logic here to check for variable branch lengths (so, endings) before doing one-to-one connections.
 								for text_pos: int in current_node.dialogue_options.size():
 									playwright_graph.connection_request.emit(StringName(current_node.name), text_pos + 1, StringName(next_node.name), text_pos + 1)
 							# rewiring if branches are coming to an end on the current node.
@@ -121,41 +120,43 @@ func import_dialogue_files(file_paths: Array) -> void:
 										playwright_graph.connection_request.emit(StringName(current_node.name), text_pos + 1, StringName(next_node.name), 1)
 								# otherwise, determine which rewires to skip and how to offset the rest.
 								else:
-									# TODO: Write rewiring logic for variable branch endings.
-									pass
+									var branch_offset: int = 0
+									for text_pos: int in current_node.dialogue_options.size():
+										if current_node.dialogue_options[text_pos].text.contains("[end]"):
+											branch_offset += 1
+										else:
+											playwright_graph.connection_request.emit(StringName(current_node.name), text_pos + 1, StringName(next_node.name), text_pos + 1 - branch_offset)
 							else:
 								print("The dialogue default node is bigger than the preceding response node.")
 						# for response nodes, use array positioning from the resource itself. this is where the parallel arrays come into play.
-						# TODO: Write rewiring logic for variable branch endings.
 						elif next_node.dialogue_type_button.selected == DLG_TYPE_RESPONSE:
 							# branching dialogue rewiring going into a response dialogue type
 							if next_node.dialogue_options.size() > 1:
-								var branch_end_positions: Array[int]
-								for text_edit_pos: int in current_node.dialogue_options.size():
-									if current_node.dialogue_options[text_edit_pos].text.contains("[end]"):
-										branch_end_positions.append(text_edit_pos)
+								var continuing_branches: Array[int]
+								for text_pos: int in current_node.dialogue_options.size():
+									if !current_node.dialogue_options[text_pos].text.contains("[end]"):
+										continuing_branches.append(text_pos)
 								
 								var slot_pos: int = 0
-								for text_edit_pos: int in current_node.dialogue_options.size():
-									var connection_count: int = dlg_res_array[node_num + 1].dialogue_options[text_edit_pos].size()
+								for branch_pos: int in continuing_branches.size():
+									var connection_count: int = dlg_res_array[node_num + 1].dialogue_options[branch_pos].size()
 									for con_num: int in connection_count:
-										playwright_graph.connection_request.emit(StringName(current_node.name), text_edit_pos + 1, StringName(next_node.name), slot_pos + 1 + con_num)
-										print("current node: " + str(current_node) + ". " + "slot left: " + str(text_edit_pos + 1) + ", slot right: " + str(slot_pos + 1))
+										playwright_graph.connection_request.emit(StringName(current_node.name), continuing_branches[branch_pos] + 1, StringName(next_node.name), slot_pos + 1 + con_num)
+										#print("current node: " + str(current_node) + ". " + "slot left: " + str(continuing_branches[branch_pos]) + ", slot right: " + str(slot_pos + 1))
 									slot_pos += connection_count
-									
-									var offset_decrement: int = 0
-									for branch_end_pos: int in branch_end_positions:
-										if slot_pos > branch_end_pos:
-											offset_decrement += 1
-									
-									slot_pos -= offset_decrement
 							# rewiring when every branch collapses into one slot on the next node.
 							else:
 								for text_pos: int in current_node.dialogue_options.size():
-									playwright_graph.connection_request.emit(StringName(current_node.name), text_pos + 1, StringName(next_node.name), 1)
+									if !current_node.dialogue_options[text_pos].text.contains("[end]"):
+										playwright_graph.connection_request.emit(StringName(current_node.name), text_pos + 1, StringName(next_node.name), 1)
 						# TODO: Decide how to handle other dialogue types in terms of rewiring nodes.
 						else:
 							pass
+					
+					# lastly, clean up [end] tags in TextEdit fields to complete deserialization.
+					for dlg_line: TextEdit in current_node.dialogue_options:
+						dlg_line.text = dlg_line.text.replace("[end]", "")
+						dlg_line.text = dlg_line.text.replace("[/end]", "")
 		
 		dlg_offset_y += DLG_OFFSET_INCREMENT_Y
 
