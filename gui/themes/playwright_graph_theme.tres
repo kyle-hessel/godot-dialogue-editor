@@ -1,5 +1,55 @@
-[gd_resource type="Theme" format=3 uid="uid://d2rww5phkt6cp"]
+[gd_resource type="Theme" load_steps=13 format=3 uid="uid://d2rww5phkt6cp"]
+
+[ext_resource type="StyleBox" uid="uid://br6f1g72boyxd" path="res://addons/playwright/gui/themes/playwright_dlg_node_panel_style_box_flat.tres" id="1_51nbb"]
+[ext_resource type="StyleBox" uid="uid://xi52fjpwie2" path="res://addons/playwright/gui/themes/playwright_dlg_node_button_selected_style_box_flat.tres" id="1_cayhf"]
+[ext_resource type="StyleBox" uid="uid://6u5r68jeke4k" path="res://addons/playwright/gui/themes/playwright_dlg_node_button_style_box_flat.tres" id="1_ir0pb"]
+[ext_resource type="StyleBox" uid="uid://mmoedk31ow4k" path="res://addons/playwright/gui/themes/playwright_dlg_node_panel_selected_style_box_flat.tres" id="2_img3f"]
+[ext_resource type="StyleBox" uid="uid://bap0c6nmvdlcm" path="res://addons/playwright/gui/themes/playwright_dlg_node_panel_titlebar_style_box_flat.tres" id="3_74lr0"]
+[ext_resource type="StyleBox" uid="uid://6o4bdx5unjor" path="res://addons/playwright/gui/themes/playwright_dlg_node_panel_titlebar_selected_style_box_flat.tres" id="4_cmfxu"]
+[ext_resource type="StyleBox" uid="uid://cgk6t35e12sku" path="res://addons/playwright/gui/themes/playwright_dlg_node_line_edit_selected_style_box_flat.tres" id="5_i3rm6"]
+[ext_resource type="StyleBox" uid="uid://bfuxr54s5myit" path="res://addons/playwright/gui/themes/playwright_dlg_node_line_edit_style_box_flat.tres" id="6_dro5y"]
+[ext_resource type="StyleBox" uid="uid://dfsek66aa0ohy" path="res://addons/playwright/gui/themes/playwright_dlg_node_option_button_selected_style_box_flat.tres" id="7_4rkrg"]
+[ext_resource type="StyleBox" uid="uid://ddu4rpaw264f3" path="res://addons/playwright/gui/themes/playwright_dlg_node_option_button_style_box_flat.tres" id="7_ebfnv"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_s10kj"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.262745, 0.290196, 0.847059, 1)
+border_width_top = 5
+border_color = Color(0.101961, 0.101961, 0.101961, 0)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_wwen2"]
+content_margin_left = 10.0
+content_margin_top = 10.0
+content_margin_right = 10.0
+content_margin_bottom = 10.0
+bg_color = Color(0.101961, 0.101961, 0.101961, 1)
+border_width_top = 5
+border_color = Color(0.101961, 0.101961, 0.101961, 0)
+corner_radius_top_left = 10
+corner_radius_top_right = 10
+corner_radius_bottom_right = 10
+corner_radius_bottom_left = 10
 
 [resource]
+Button/styles/focus = ExtResource("1_ir0pb")
+Button/styles/hover = ExtResource("1_cayhf")
+Button/styles/normal = ExtResource("1_ir0pb")
+GraphNode/styles/panel = ExtResource("1_51nbb")
+GraphNode/styles/panel_selected = ExtResource("2_img3f")
+GraphNode/styles/titlebar = ExtResource("3_74lr0")
+GraphNode/styles/titlebar_selected = ExtResource("4_cmfxu")
+LineEdit/styles/focus = ExtResource("5_i3rm6")
+LineEdit/styles/normal = ExtResource("6_dro5y")
+OptionButton/styles/focus = ExtResource("7_4rkrg")
+OptionButton/styles/normal = ExtResource("7_ebfnv")
 TextEdit/constants/line_spacing = 4
 TextEdit/font_sizes/font_size = 16
+TextEdit/styles/focus = SubResource("StyleBoxFlat_s10kj")
+TextEdit/styles/normal = SubResource("StyleBoxFlat_wwen2")
