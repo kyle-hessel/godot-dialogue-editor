@@ -78,10 +78,12 @@ func instantiate_dialogue_node() -> GraphNode:
 	dialogue_nodes.append(playwright_dialogue_inst)
 	name_increment += 1
 	playwright_dialogue_inst.name = "PlaywrightDialogue" + str(name_increment)
+	playwright_dialogue_inst.title = dialogue_name_line_edit.text + str(name_increment)
 	playwright_dialogue_inst.delete_node.connect(_on_delete_node)
 	return playwright_dialogue_inst
 
 func import_dialogue_files(file_paths: Array) -> void:
+	name_increment = 0
 	# import every dialogue file that was selected.
 	for file_path: String in file_paths:
 		dlg_offset_x = 0.0
@@ -89,6 +91,8 @@ func import_dialogue_files(file_paths: Array) -> void:
 		# Take the loaded dialogue resource and use it to make parallel arrays of dialogue nodes and resources.
 		var dlg_node_array: Array[GraphNode]
 		var dlg_res_array: Array[Dialogue]
+		
+		dialogue_name_line_edit.text = dlg_res.resource_name
 		deserialize_dialogue(dlg_res, dlg_node_array, dlg_res_array)
 		
 		# if there's more than one dialogue node in the chain during deserialization, determine how to rewire connections between nodes.
@@ -162,6 +166,11 @@ func import_dialogue_files(file_paths: Array) -> void:
 
 func deserialize_dialogue(dlg_res: Dialogue, out_node_array: Array[GraphNode], out_res_array: Array[Dialogue]) -> void:
 	var dlg_node_inst: GraphNode = instantiate_dialogue_node()
+	if out_node_array.is_empty():
+		dlg_node_inst.title = dialogue_name_line_edit.text
+	else:
+		dlg_node_inst.title = dialogue_name_line_edit.text + "_" + str(name_increment - 1)
+	
 	dialogue_nodes.append(dlg_node_inst)
 	out_node_array.append(dlg_node_inst)
 	out_res_array.append(dlg_res)
@@ -282,6 +291,7 @@ func serialize_unconnected_dlg_nodes(dlg_node_array: Array[GraphNode]) -> void:
 		await file_operation_complete
 
 func save_dialogue_res_to_disk(dlg_res: Dialogue, res_name: String):
+	recursive_sub_dlg_res_rename(dlg_res, res_name) # renames the resource_name for this dialogue and any nested ones. good for clarity in resource data, especially in git.
 	var dlg_filename: String = res_name + ".tres"
 	dlg_file_dialog.current_path = dlg_filename
 	
@@ -310,6 +320,17 @@ func save_dialogue_res_to_disk(dlg_res: Dialogue, res_name: String):
 	dlg_file_dialog.canceled.connect(canceled_func)
 	
 	dlg_file_dialog.visible = true
+
+func recursive_sub_dlg_res_rename(dlg_res: Dialogue, res_name: String, counter: int = 0) -> void:
+	if counter == 0:
+		dlg_res.resource_name = res_name
+	else:
+		dlg_res.resource_name = res_name + "_" + str(counter)
+	
+	counter += 1
+	
+	if dlg_res.next_dialogue != null:
+		recursive_sub_dlg_res_rename(dlg_res.next_dialogue, res_name, counter)
 
 func flush_file_dlg_signals(file_dlg: FileDialog, signals: Array[String]):
 	var decrement: int = 1
@@ -445,19 +466,22 @@ func transcribe_dialogue_node_to_resource(dlg_node: GraphNode, last_node_name: S
 
 # NOTE: helper function for the above function, does what it says.
 func append_end_tag_to_string(base_string: String, dlg_lines_pos: int, dlg_node: GraphNode, next_node: GraphNode, dlg_line_connections: Array[Dictionary]) -> String:
-	var is_connected_to_something: bool = false
-	for connection: Dictionary in dlg_line_connections:
-		for dlg_option_pos: int in next_node.dialogue_options.size():
-			if playwright_graph.is_node_connected(StringName(dlg_node.name), dlg_lines_pos + 1, StringName(next_node.name), dlg_option_pos + 1):
-				is_connected_to_something = true
+	if dlg_node != null && next_node != null:
+		var is_connected_to_something: bool = false
+		for connection: Dictionary in dlg_line_connections:
+			for dlg_option_pos: int in next_node.dialogue_options.size():
+				if playwright_graph.is_node_connected(StringName(dlg_node.name), dlg_lines_pos + 1, StringName(next_node.name), dlg_option_pos + 1):
+					is_connected_to_something = true
+					break
+			if is_connected_to_something:
 				break
-		if is_connected_to_something:
-			break
+			
+		if !is_connected_to_something:
+			base_string = "[end]" + base_string + "[/end]"
 		
-	if !is_connected_to_something:
-		base_string = "[end]" + base_string + "[/end]"
-	
-	return base_string
+		return base_string
+	else:
+		return ""
 
 func _on_playwright_graph_connection_request(from_node: StringName, from_port: int, to_node: StringName, to_port: int):
 	playwright_graph.connect_node(from_node, from_port, to_node, to_port)
