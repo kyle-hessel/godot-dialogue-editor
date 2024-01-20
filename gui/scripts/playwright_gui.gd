@@ -215,6 +215,10 @@ func deserialize_dialogue(dlg_res: Dialogue, out_node_array: Array[GraphNode], o
 				dlg_node_inst.dialogue_options[dlg_pos].text = dlg_line
 				dlg_pos += 1
 	
+	# resize every TextEdit according to its contents.
+	for dlg_branch: TextEdit in dlg_node_inst.dialogue_options:
+		dlg_branch.resize_on_instantiate()
+	
 	# if there is a next dialogue, recursively call this function again.
 	if dlg_res.next_dialogue != null:
 		deserialize_dialogue(dlg_res.next_dialogue, out_node_array, out_res_array)

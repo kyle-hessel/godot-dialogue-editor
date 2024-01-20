@@ -23,3 +23,9 @@ func resize_text_edit() -> void:
 			elif line_count < line_count_cached:
 				custom_minimum_size.y -= resize_amount - line_count
 	line_count_cached = line_count
+
+func resize_on_instantiate() -> void:
+	var line_count: int = get_line_count()
+	if line_count > 1:
+		for num: int in line_count:
+			custom_minimum_size.y += resize_amount - line_count
