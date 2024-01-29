@@ -1,6 +1,9 @@
-[gd_scene load_steps=2 format=3 uid="uid://fqkwapjhm27u"]
+[gd_scene load_steps=3 format=3 uid="uid://fqkwapjhm27u"]
 
 [ext_resource type="Script" path="res://addons/playwright/gui/scripts/playwright_gui.gd" id="1_5oo5w"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_l54i4"]
+bg_color = Color(0.133333, 0.133333, 0.133333, 1)
 
 [node name="PlaywrightGUI" type="Control"]
 layout_mode = 3
@@ -12,7 +15,7 @@ grow_vertical = 2
 size_flags_vertical = 3
 script = ExtResource("1_5oo5w")
 
-[node name="PlaywrightGraph" type="GraphEdit" parent="."]
+[node name="PlaywrightGraph" type="GraphEdit" parent="." groups=["dialogue_editor"]]
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
@@ -24,7 +27,7 @@ show_grid = false
 snapping_enabled = false
 right_disconnects = true
 
-[node name="AddDialogueButton" type="Button" parent="."]
+[node name="AddDialogueButton" type="Button" parent="." groups=["dialogue_editor"]]
 z_index = 1
 layout_mode = 0
 offset_left = 568.0
@@ -33,7 +36,7 @@ offset_right = 679.0
 offset_bottom = 45.0
 text = "Add Dialogue"
 
-[node name="SerializeDialogueButton" type="Button" parent="."]
+[node name="SerializeDialogueButton" type="Button" parent="." groups=["dialogue_editor"]]
 z_index = 1
 layout_mode = 0
 offset_left = 705.0
@@ -42,7 +45,7 @@ offset_right = 850.0
 offset_bottom = 45.0
 text = "Serialize Dialogue"
 
-[node name="ImportDialogueButton" type="Button" parent="."]
+[node name="ImportDialogueButton" type="Button" parent="." groups=["dialogue_editor"]]
 z_index = 1
 layout_mode = 0
 offset_left = 878.0
@@ -52,7 +55,7 @@ offset_bottom = 45.0
 text = "Import Dialogue
 "
 
-[node name="DialogueNameLineEdit" type="LineEdit" parent="."]
+[node name="DialogueNameLineEdit" type="LineEdit" parent="." groups=["dialogue_editor"]]
 layout_mode = 0
 offset_left = 324.0
 offset_top = 12.0
@@ -73,6 +76,35 @@ size = Vector2i(1080, 720)
 ok_button_text = "Open"
 file_mode = 1
 
+[node name="PlaywrightDirector" type="PanelContainer" parent="." groups=["cutscene_editor"]]
+visible = false
+z_index = 1
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_l54i4")
+
+[node name="TextEdit" type="TextEdit" parent="." groups=["cutscene_editor"]]
+visible = false
+z_index = 2
+layout_mode = 2
+offset_left = 371.0
+offset_top = 131.0
+offset_right = 1215.0
+offset_bottom = 783.0
+
+[node name="SwitchEditorButton" type="Button" parent="."]
+z_index = 2
+layout_mode = 0
+offset_left = 21.0
+offset_top = 67.0
+offset_right = 144.0
+offset_bottom = 122.0
+text = "Switch Editor"
+
 [connection signal="ready" from="." to="." method="_on_ready"]
 [connection signal="connection_request" from="PlaywrightGraph" to="." method="_on_playwright_graph_connection_request"]
 [connection signal="connection_to_empty" from="PlaywrightGraph" to="." method="_on_playwright_graph_connection_to_empty"]
@@ -80,3 +112,4 @@ file_mode = 1
 [connection signal="pressed" from="AddDialogueButton" to="." method="_on_add_dialogue_button_pressed"]
 [connection signal="pressed" from="SerializeDialogueButton" to="." method="_on_serialize_dialogue_button_pressed"]
 [connection signal="pressed" from="ImportDialogueButton" to="." method="_on_import_dialogue_button_pressed"]
+[connection signal="pressed" from="SwitchEditorButton" to="." method="_on_switch_editor_button_pressed"]

@@ -16,6 +16,8 @@ const DLG_TYPE_SHOUT: int = 4
 var fs: EditorFileSystem = EditorInterface.get_resource_filesystem()
 var res_prev: EditorResourcePreview = EditorInterface.get_resource_previewer()
 
+@onready var mode_switch_button: Button = $SwitchEditorButton
+
 @onready var playwright_graph: GraphEdit = $PlaywrightGraph
 @onready var dialogue_name_line_edit: LineEdit = $DialogueNameLineEdit
 @onready var add_dialogue_button: Button = $AddDialogueButton
@@ -27,6 +29,11 @@ signal file_operation_complete
 var dialogue_nodes: Array[GraphNode]
 var generated_dialogues: Array[Dialogue]
 var selected_files: Array
+
+var graph_group: Array
+var director_group: Array
+var mode_switch: bool = false
+var switch_button_default_pos: Vector2 = Vector2(21, 67)
 
 var dlg_offset_x: float = 0
 var dlg_offset_y: float = 0
@@ -55,6 +62,21 @@ func _on_ready():
 			selected_files = Array(file_paths)
 			import_dialogue_files(selected_files)
 	)
+	
+	graph_group = get_tree().get_nodes_in_group("dialogue_editor")
+	director_group = get_tree().get_nodes_in_group("cutscene_editor")
+
+func _on_switch_editor_button_pressed():
+	print("switch!!!")
+	mode_switch = !mode_switch
+	
+	if mode_switch:
+		mode_switch_button.position.y -= 46
+	else:
+		mode_switch_button.position.y += 46
+	
+	for d in director_group:
+		d.visible = !d.visible
 
 func _on_add_dialogue_button_pressed():
 	dialogue_nodes.append(instantiate_dialogue_node())
