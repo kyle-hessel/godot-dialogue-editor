@@ -45,6 +45,29 @@ func _enter_tree():
 
 # use the ready signal of the parent node, as children may instantiate first but not yet have a parent.
 func _on_ready():
+	init_dialogue_editor()
+	init_cutscene_editor()
+	
+	graph_group = get_tree().get_nodes_in_group("dialogue_editor")
+	director_group = get_tree().get_nodes_in_group("cutscene_editor")
+
+func _on_switch_editor_button_pressed():
+	print("switch!!!")
+	mode_switch = !mode_switch
+	
+	if mode_switch:
+		mode_switch_button.position.y -= 46
+	else:
+		mode_switch_button.position.y += 46
+	
+	for d in director_group:
+		d.visible = !d.visible
+
+func init_cutscene_editor() -> void:
+	pass
+
+#region DIALOGUE EDITOR
+func init_dialogue_editor() -> void:
 	playwright_graph.snapping_enabled = false
 	playwright_graph.show_grid = false
 	
@@ -62,21 +85,6 @@ func _on_ready():
 			selected_files = Array(file_paths)
 			import_dialogue_files(selected_files)
 	)
-	
-	graph_group = get_tree().get_nodes_in_group("dialogue_editor")
-	director_group = get_tree().get_nodes_in_group("cutscene_editor")
-
-func _on_switch_editor_button_pressed():
-	print("switch!!!")
-	mode_switch = !mode_switch
-	
-	if mode_switch:
-		mode_switch_button.position.y -= 46
-	else:
-		mode_switch_button.position.y += 46
-	
-	for d in director_group:
-		d.visible = !d.visible
 
 func _on_add_dialogue_button_pressed():
 	dialogue_nodes.append(instantiate_dialogue_node())
@@ -552,3 +560,4 @@ func _on_delete_node(dialogue_node: GraphNode) -> void:
 			dialogue_node.queue_free()
 	else:
 		dialogue_node.queue_free()
+#endregion
