@@ -3,6 +3,8 @@
 extends Control
 
 #region CONSTANTS
+const MODE_SWITCH_OFFSET: int = 46
+
 const PlaywrightDialogue: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_dialogue.tscn")
 const DLG_OFFSET_INCREMENT_X: float = 300.0
 const DLG_OFFSET_INCREMENT_Y: float = 500.0
@@ -33,7 +35,6 @@ var selected_files: Array
 var graph_group: Array
 var director_group: Array
 var mode_switch: bool = false
-var switch_button_default_pos: Vector2 = Vector2(21, 67)
 
 var dlg_offset_x: float = 0
 var dlg_offset_y: float = 0
@@ -56,9 +57,9 @@ func _on_switch_editor_button_pressed():
 	mode_switch = !mode_switch
 	
 	if mode_switch:
-		mode_switch_button.position.y -= 46
+		mode_switch_button.position.y -= MODE_SWITCH_OFFSET
 	else:
-		mode_switch_button.position.y += 46
+		mode_switch_button.position.y += MODE_SWITCH_OFFSET
 	
 	for d in director_group:
 		d.visible = !d.visible
