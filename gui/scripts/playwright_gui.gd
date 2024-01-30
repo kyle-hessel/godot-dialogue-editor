@@ -67,6 +67,9 @@ func _on_switch_editor_button_pressed():
 func init_cutscene_editor() -> void:
 	pass
 
+func _on_add_cutscene_button_pressed():
+	pass # Replace with function body.
+
 #region DIALOGUE EDITOR
 func init_dialogue_editor() -> void:
 	playwright_graph.snapping_enabled = false

@@ -6,7 +6,7 @@
 bg_color = Color(0.133333, 0.133333, 0.133333, 1)
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_iefqb"]
-bg_color = Color(0.223529, 0.235294, 0.611765, 0.278431)
+bg_color = Color(0.368627, 0.368627, 0.345098, 0.278431)
 
 [node name="PlaywrightGUI" type="Control"]
 layout_mode = 3
@@ -80,6 +80,7 @@ ok_button_text = "Open"
 file_mode = 1
 
 [node name="PlaywrightDirector" type="Control" parent="." groups=["cutscene_editor"]]
+visible = false
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
@@ -95,6 +96,14 @@ offset_bottom = 1041.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_l54i4")
+
+[node name="AddCutsceneButton" type="Button" parent="PlaywrightDirector/PlaywrightDirectorBGPanel"]
+layout_mode = 0
+offset_left = 188.0
+offset_top = 25.0
+offset_right = 312.0
+offset_bottom = 66.0
+text = "Add Cutscene"
 
 [node name="PlaywrightDirectorLeftColumn" type="Panel" parent="PlaywrightDirector"]
 z_index = 1
@@ -118,10 +127,10 @@ offset_bottom = 1062.0
 [node name="TextEdit" type="TextEdit" parent="PlaywrightDirector"]
 z_index = 2
 layout_mode = 2
-offset_left = 371.0
-offset_top = 131.0
-offset_right = 1215.0
-offset_bottom = 783.0
+offset_left = 456.0
+offset_top = 188.0
+offset_right = 1300.0
+offset_bottom = 840.0
 
 [node name="SwitchEditorButton" type="Button" parent="."]
 z_index = 2
@@ -139,4 +148,5 @@ text = "Switch Editor"
 [connection signal="pressed" from="AddDialogueButton" to="." method="_on_add_dialogue_button_pressed"]
 [connection signal="pressed" from="SerializeDialogueButton" to="." method="_on_serialize_dialogue_button_pressed"]
 [connection signal="pressed" from="ImportDialogueButton" to="." method="_on_import_dialogue_button_pressed"]
+[connection signal="pressed" from="PlaywrightDirector/PlaywrightDirectorBGPanel/AddCutsceneButton" to="." method="_on_add_cutscene_button_pressed"]
 [connection signal="pressed" from="SwitchEditorButton" to="." method="_on_switch_editor_button_pressed"]
