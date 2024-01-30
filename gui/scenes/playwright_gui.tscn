@@ -80,7 +80,6 @@ ok_button_text = "Open"
 file_mode = 1
 
 [node name="PlaywrightDirector" type="Control" parent="." groups=["cutscene_editor"]]
-visible = false
 anchors_preset = 0
 offset_right = 40.0
 offset_bottom = 40.0
@@ -123,14 +122,6 @@ offset_left = 11.0
 offset_top = 157.0
 offset_right = 155.0
 offset_bottom = 1062.0
-
-[node name="TextEdit" type="TextEdit" parent="PlaywrightDirector"]
-z_index = 2
-layout_mode = 2
-offset_left = 456.0
-offset_top = 188.0
-offset_right = 1300.0
-offset_bottom = 840.0
 
 [node name="SwitchEditorButton" type="Button" parent="."]
 z_index = 2
