@@ -16,7 +16,8 @@ const DLG_TYPE_SHOUT: int = 4
 var fs: EditorFileSystem = EditorInterface.get_resource_filesystem()
 var res_prev: EditorResourcePreview = EditorInterface.get_resource_previewer()
 
-@onready var playwright_graph: GraphEdit = $PlaywrightGraph
+@onready var playwright_graph: GraphEdit = $PlaywrightGraph # dialogue editor
+@onready var playwright_graph2: GraphEdit = $PlaywrightGraph2 # cutscene editor
 
 @onready var mode_switch_button: CheckButton = $ModeSwitchButton
 
@@ -71,11 +72,13 @@ func _on_ready():
 			import_dialogue_files(selected_files)
 	)
 	
+	dialogue_edit_controls.append(playwright_graph)
 	dialogue_edit_controls.append(dialogue_name_line_edit)
 	dialogue_edit_controls.append(add_dialogue_button)
 	dialogue_edit_controls.append(import_dialogue_button)
 	dialogue_edit_controls.append(serialize_dialogue_button)
 	
+	cutscene_edit_controls.append(playwright_graph2)
 	cutscene_edit_controls.append(cutscene_name_line_edit)
 	cutscene_edit_controls.append(event_option_button)
 	cutscene_edit_controls.append(add_cutscene_button)
@@ -87,6 +90,8 @@ func _on_mode_switch_button_toggled(toggled_on):
 		d.visible = !d.visible
 	for c in cutscene_edit_controls:
 		c.visible = !c.visible
+
+
 
 #region Dialogue Editor Code
 func _on_add_dialogue_button_pressed():

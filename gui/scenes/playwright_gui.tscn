@@ -24,6 +24,19 @@ show_grid = false
 snapping_enabled = false
 right_disconnects = true
 
+[node name="PlaywrightGraph2" type="GraphEdit" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+size_flags_vertical = 3
+show_grid = false
+snapping_enabled = false
+right_disconnects = true
+
 [node name="ModeSwitchButton" type="CheckButton" parent="."]
 layout_mode = 0
 offset_left = 337.0
@@ -33,7 +46,6 @@ offset_bottom = 44.0
 text = "Mode"
 
 [node name="AddDialogueButton" type="Button" parent="."]
-visible = false
 z_index = 1
 layout_mode = 0
 offset_left = 462.0
@@ -43,7 +55,6 @@ offset_bottom = 45.0
 text = "Add Dialogue"
 
 [node name="SerializeDialogueButton" type="Button" parent="."]
-visible = false
 z_index = 1
 layout_mode = 0
 offset_left = 599.0
@@ -53,7 +64,6 @@ offset_bottom = 45.0
 text = "Serialize Dialogue"
 
 [node name="ImportDialogueButton" type="Button" parent="."]
-visible = false
 z_index = 1
 layout_mode = 0
 offset_left = 772.0
@@ -64,7 +74,6 @@ text = "Import Dialogue
 "
 
 [node name="DialogueNameLineEdit" type="LineEdit" parent="."]
-visible = false
 layout_mode = 0
 offset_left = 938.0
 offset_top = 12.0
@@ -73,6 +82,7 @@ offset_bottom = 44.0
 placeholder_text = "Dialogue Name"
 
 [node name="EventOptionButton" type="OptionButton" parent="."]
+visible = false
 layout_mode = 0
 offset_left = 464.0
 offset_top = 12.0
@@ -86,6 +96,7 @@ popup/item_1/text = "Camera Switch"
 popup/item_1/id = 1
 
 [node name="AddCutsceneButton" type="Button" parent="."]
+visible = false
 z_index = 1
 layout_mode = 0
 offset_left = 647.0
@@ -95,6 +106,7 @@ offset_bottom = 45.0
 text = "Add Event"
 
 [node name="SerializeCutsceneButton" type="Button" parent="."]
+visible = false
 z_index = 1
 layout_mode = 0
 offset_left = 784.0
@@ -104,6 +116,7 @@ offset_bottom = 45.0
 text = "Serialize Cutscene"
 
 [node name="ImportCutsceneButton" type="Button" parent="."]
+visible = false
 z_index = 1
 layout_mode = 0
 offset_left = 957.0
@@ -113,6 +126,7 @@ offset_bottom = 45.0
 text = "Import Cutscene"
 
 [node name="CutsceneNameLineEdit" type="LineEdit" parent="."]
+visible = false
 layout_mode = 0
 offset_left = 1123.0
 offset_top = 12.0
