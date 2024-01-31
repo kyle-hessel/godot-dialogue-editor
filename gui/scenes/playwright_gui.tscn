@@ -33,6 +33,7 @@ offset_bottom = 44.0
 text = "Mode"
 
 [node name="AddDialogueButton" type="Button" parent="."]
+visible = false
 z_index = 1
 layout_mode = 0
 offset_left = 462.0
@@ -42,6 +43,7 @@ offset_bottom = 45.0
 text = "Add Dialogue"
 
 [node name="SerializeDialogueButton" type="Button" parent="."]
+visible = false
 z_index = 1
 layout_mode = 0
 offset_left = 599.0
@@ -51,6 +53,7 @@ offset_bottom = 45.0
 text = "Serialize Dialogue"
 
 [node name="ImportDialogueButton" type="Button" parent="."]
+visible = false
 z_index = 1
 layout_mode = 0
 offset_left = 772.0
@@ -61,6 +64,7 @@ text = "Import Dialogue
 "
 
 [node name="DialogueNameLineEdit" type="LineEdit" parent="."]
+visible = false
 layout_mode = 0
 offset_left = 938.0
 offset_top = 12.0
@@ -69,7 +73,6 @@ offset_bottom = 44.0
 placeholder_text = "Dialogue Name"
 
 [node name="EventOptionButton" type="OptionButton" parent="."]
-visible = false
 layout_mode = 0
 offset_left = 464.0
 offset_top = 12.0
@@ -83,7 +86,6 @@ popup/item_1/text = "Camera Switch"
 popup/item_1/id = 1
 
 [node name="AddCutsceneButton" type="Button" parent="."]
-visible = false
 z_index = 1
 layout_mode = 0
 offset_left = 647.0
@@ -93,7 +95,6 @@ offset_bottom = 45.0
 text = "Add Event"
 
 [node name="SerializeCutsceneButton" type="Button" parent="."]
-visible = false
 z_index = 1
 layout_mode = 0
 offset_left = 784.0
@@ -103,7 +104,6 @@ offset_bottom = 45.0
 text = "Serialize Cutscene"
 
 [node name="ImportCutsceneButton" type="Button" parent="."]
-visible = false
 z_index = 1
 layout_mode = 0
 offset_left = 957.0
@@ -113,7 +113,6 @@ offset_bottom = 45.0
 text = "Import Cutscene"
 
 [node name="CutsceneNameLineEdit" type="LineEdit" parent="."]
-visible = false
 layout_mode = 0
 offset_left = 1123.0
 offset_top = 12.0
@@ -138,6 +137,7 @@ file_mode = 1
 [connection signal="connection_request" from="PlaywrightGraph" to="." method="_on_playwright_graph_connection_request"]
 [connection signal="connection_to_empty" from="PlaywrightGraph" to="." method="_on_playwright_graph_connection_to_empty"]
 [connection signal="disconnection_request" from="PlaywrightGraph" to="." method="_on_playwright_graph_disconnection_request"]
+[connection signal="toggled" from="ModeSwitchButton" to="." method="_on_mode_switch_button_toggled"]
 [connection signal="pressed" from="AddDialogueButton" to="." method="_on_add_dialogue_button_pressed"]
 [connection signal="pressed" from="SerializeDialogueButton" to="." method="_on_serialize_dialogue_button_pressed"]
 [connection signal="pressed" from="ImportDialogueButton" to="." method="_on_import_dialogue_button_pressed"]

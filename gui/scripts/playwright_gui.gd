@@ -82,7 +82,11 @@ func _on_ready():
 	cutscene_edit_controls.append(import_cutscene_button)
 	cutscene_edit_controls.append(serialize_cutscene_button)
 
-
+func _on_mode_switch_button_toggled(toggled_on):
+	for d in dialogue_edit_controls:
+		d.visible = !d.visible
+	for c in cutscene_edit_controls:
+		c.visible = !c.visible
 
 #region Dialogue Editor Code
 func _on_add_dialogue_button_pressed():
@@ -560,3 +564,4 @@ func _on_delete_node(dialogue_node: GraphNode) -> void:
 	else:
 		dialogue_node.queue_free()
 #endregion
+
