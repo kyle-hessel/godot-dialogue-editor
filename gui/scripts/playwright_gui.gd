@@ -17,12 +17,27 @@ var fs: EditorFileSystem = EditorInterface.get_resource_filesystem()
 var res_prev: EditorResourcePreview = EditorInterface.get_resource_previewer()
 
 @onready var playwright_graph: GraphEdit = $PlaywrightGraph
+
+@onready var mode_switch_button: CheckButton = $ModeSwitchButton
+
 @onready var dialogue_name_line_edit: LineEdit = $DialogueNameLineEdit
 @onready var add_dialogue_button: Button = $AddDialogueButton
-@onready var dlg_file_dialog: FileDialog = $DialogueFileDialog
-@onready var import_file_dialog: FileDialog = $ImportFileDialog
+@onready var import_dialogue_button: Button = $ImportDialogueButton
+@onready var serialize_dialogue_button: Button = $SerializeDialogueButton
+
+@onready var cutscene_name_line_edit: LineEdit = $CutsceneNameLineEdit
+@onready var event_option_button: OptionButton = $EventOptionButton
+@onready var add_cutscene_button: Button = $AddCutsceneButton
+@onready var import_cutscene_button: Button = $ImportCutsceneButton
+@onready var serialize_cutscene_button: Button = $SerializeCutsceneButton
+
+@onready var export_dlg_file_dialog: FileDialog = $ExportDlgFileDialog
+@onready var import_dlg_file_dialog: FileDialog = $ImportDlgFileDialog
 
 signal file_operation_complete
+
+var dialogue_edit_controls: Array
+var cutscene_edit_controls: Array
 
 var dialogue_nodes: Array[GraphNode]
 var generated_dialogues: Array[Dialogue]
@@ -41,31 +56,45 @@ func _on_ready():
 	playwright_graph.snapping_enabled = false
 	playwright_graph.show_grid = false
 	
-	# handle ImportFileDialog if one file is selected.
-	import_file_dialog.file_selected.connect(
+	# handle ImportDlgFileDialog if one file is selected.
+	import_dlg_file_dialog.file_selected.connect(
 		func(file_path: String):
 			selected_files.clear()
 			selected_files.append(file_path)
 			import_dialogue_files(selected_files)
 	)
-	# handle ImportFileDialog if multiple files are selected.
-	import_file_dialog.files_selected.connect(
+	# handle ImportDlgFileDialog if multiple files are selected.
+	import_dlg_file_dialog.files_selected.connect(
 		func(file_paths: PackedStringArray):
 			selected_files.clear()
 			selected_files = Array(file_paths)
 			import_dialogue_files(selected_files)
 	)
+	
+	dialogue_edit_controls.append(dialogue_name_line_edit)
+	dialogue_edit_controls.append(add_dialogue_button)
+	dialogue_edit_controls.append(import_dialogue_button)
+	dialogue_edit_controls.append(serialize_dialogue_button)
+	
+	cutscene_edit_controls.append(cutscene_name_line_edit)
+	cutscene_edit_controls.append(event_option_button)
+	cutscene_edit_controls.append(add_cutscene_button)
+	cutscene_edit_controls.append(import_cutscene_button)
+	cutscene_edit_controls.append(serialize_cutscene_button)
 
+
+
+#region Dialogue Editor Code
 func _on_add_dialogue_button_pressed():
-	dialogue_nodes.append(instantiate_dialogue_node())
+	instantiate_dialogue_node()
 
 func _on_import_dialogue_button_pressed():
-	import_file_dialog.visible = true
+	import_dlg_file_dialog.visible = true
 
 func _on_playwright_graph_connection_to_empty(from_node: StringName, from_port: int, release_position: Vector2):
 	if from_port == 0:
 		var dlg_node_inst: GraphNode = instantiate_dialogue_node()
-		dialogue_nodes.append(dlg_node_inst)
+		#dialogue_nodes.append(dlg_node_inst)
 		var from_node_path: String = "PlaywrightGraph/" + String(from_node)
 		var new_node_offset: Vector2 = get_node(NodePath(from_node_path)).position_offset
 		new_node_offset.x += DLG_OFFSET_INCREMENT_X
@@ -297,33 +326,33 @@ func serialize_unconnected_dlg_nodes(dlg_node_array: Array[GraphNode]) -> void:
 func save_dialogue_res_to_disk(dlg_res: Dialogue, res_name: String):
 	recursive_sub_dlg_res_rename(dlg_res, res_name) # renames the resource_name for this dialogue and any nested ones. good for clarity in resource data, especially in git.
 	var dlg_filename: String = res_name + ".tres"
-	dlg_file_dialog.current_path = dlg_filename
+	export_dlg_file_dialog.current_path = dlg_filename
 	
 	var confirmed_func: Callable = func():
-		var save_result: Error = ResourceSaver.save(dlg_res, dlg_file_dialog.current_path)
+		var save_result: Error = ResourceSaver.save(dlg_res, export_dlg_file_dialog.current_path)
 		
 		if save_result != OK:
 			print(save_result)
 		else:
 			# there isn't an easy fix for immediate resource updating upon overwrite, see: https://github.com/godotengine/godot/issues/30302
 			# but, relaunching the editor or sometimes clicking around a bit afterwards does the job.
-			fs.update_file(dlg_file_dialog.current_path)
+			fs.update_file(export_dlg_file_dialog.current_path)
 			#res_prev.check_for_invalidation(dlg_file_dialog.current_path)
 			print("File saved!")
 		
-		flush_file_dlg_signals(dlg_file_dialog, ["confirmed", "canceled"])
+		flush_file_dlg_signals(export_dlg_file_dialog, ["confirmed", "canceled"])
 		file_operation_complete.emit()
 	
 	var canceled_func: Callable = func():
 		print("File save aborted.")
 		
-		flush_file_dlg_signals(dlg_file_dialog, ["confirmed", "canceled"])
+		flush_file_dlg_signals(export_dlg_file_dialog, ["confirmed", "canceled"])
 		file_operation_complete.emit()
 	
-	dlg_file_dialog.confirmed.connect(confirmed_func)
-	dlg_file_dialog.canceled.connect(canceled_func)
+	export_dlg_file_dialog.confirmed.connect(confirmed_func)
+	export_dlg_file_dialog.canceled.connect(canceled_func)
 	
-	dlg_file_dialog.visible = true
+	export_dlg_file_dialog.visible = true
 
 func recursive_sub_dlg_res_rename(dlg_res: Dialogue, res_name: String, counter: int = 0) -> void:
 	if counter == 0:
@@ -530,3 +559,4 @@ func _on_delete_node(dialogue_node: GraphNode) -> void:
 			dialogue_node.queue_free()
 	else:
 		dialogue_node.queue_free()
+#endregion
