@@ -1,0 +1,41 @@
+[gd_scene load_steps=2 format=3 uid="uid://cxnqaf8iekqfu"]
+
+[ext_resource type="Script" path="res://addons/playwright/gui/scripts/playwright_cutscene.gd" id="1_g7bbw"]
+
+[node name="PlaywrightEvent" type="GraphNode"]
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_right = -1606.0
+offset_bottom = -563.0
+grow_horizontal = 2
+grow_vertical = 2
+title = "Event"
+slot/0/left_enabled = true
+slot/0/left_type = 0
+slot/0/left_color = Color(0.87451, 0.239216, 0.270588, 1)
+slot/0/left_icon = null
+slot/0/right_enabled = true
+slot/0/right_type = 0
+slot/0/right_color = Color(0.87451, 0.239216, 0.270588, 1)
+slot/0/right_icon = null
+slot/0/draw_stylebox = true
+slot/1/left_enabled = false
+slot/1/left_type = 0
+slot/1/left_color = Color(1, 1, 1, 1)
+slot/1/left_icon = null
+slot/1/right_enabled = false
+slot/1/right_type = 0
+slot/1/right_color = Color(1, 1, 1, 1)
+slot/1/right_icon = null
+slot/1/draw_stylebox = true
+script = ExtResource("1_g7bbw")
+
+[node name="NextEventLabel" type="Label" parent="."]
+layout_mode = 2
+text = "Next Event"
+horizontal_alignment = 1
+
+[node name="EventNameLineEdit" type="LineEdit" parent="."]
+layout_mode = 2
+placeholder_text = "Event name"
