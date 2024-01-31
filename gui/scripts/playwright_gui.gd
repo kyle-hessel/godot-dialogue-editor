@@ -85,7 +85,7 @@ func _on_ready():
 	cutscene_edit_controls.append(import_cutscene_button)
 	cutscene_edit_controls.append(serialize_cutscene_button)
 
-func _on_mode_switch_button_toggled(toggled_on):
+func _on_mode_switch_button_toggled(toggled_on: bool):
 	for d in dialogue_edit_controls:
 		d.visible = !d.visible
 	for c in cutscene_edit_controls:
