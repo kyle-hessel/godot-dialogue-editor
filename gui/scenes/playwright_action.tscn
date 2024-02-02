@@ -1,6 +1,6 @@
 [gd_scene load_steps=2 format=3 uid="uid://cxnqaf8iekqfu"]
 
-[ext_resource type="Script" path="res://addons/playwright/gui/scripts/playwright_cutscene.gd" id="1_g7bbw"]
+[ext_resource type="Script" path="res://addons/playwright/gui/scripts/playwright_action.gd" id="1_g7bbw"]
 
 [node name="PlaywrightEvent" type="GraphNode"]
 anchors_preset = 15
