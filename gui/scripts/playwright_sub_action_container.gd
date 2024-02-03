@@ -12,7 +12,7 @@ func _ready():
 func _process(delta):
 	pass
 
-func _on_add_parallel_action_button_pressed():
+func _on_add_sub_action_button_pressed():
 	var new_label: Label = sub_action_label.duplicate()
 	add_child(new_label)
 	

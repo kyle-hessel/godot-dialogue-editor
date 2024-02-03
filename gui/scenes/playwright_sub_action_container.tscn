@@ -66,3 +66,5 @@ text = "Add Sub-Action"
 layout_mode = 2
 text = "Sub-Action 1"
 horizontal_alignment = 1
+
+[connection signal="pressed" from="AddSubActionButton" to="." method="_on_add_sub_action_button_pressed"]

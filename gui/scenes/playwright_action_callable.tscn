@@ -1,16 +1,16 @@
-[gd_scene load_steps=2 format=3 uid="uid://blbiqsj8hujnc"]
+[gd_scene load_steps=2 format=3 uid="uid://cfrwy2wcuueu3"]
 
-[ext_resource type="Script" path="res://addons/playwright/gui/scripts/playwright_action.gd" id="1_fdmgt"]
+[ext_resource type="Script" path="res://addons/playwright/gui/scripts/playwright_action.gd" id="1_8rd3l"]
 
 [node name="PlaywrightAction" type="GraphNode"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_right = -1606.0
-offset_bottom = -888.0
+offset_bottom = -855.0
 grow_horizontal = 2
 grow_vertical = 2
-title = "Camera Switch Action"
+title = "Callable Action"
 slot/0/left_enabled = true
 slot/0/left_type = 0
 slot/0/left_color = Color(0.87451, 0.239216, 0.270588, 1)
@@ -47,7 +47,16 @@ slot/3/right_type = 0
 slot/3/right_color = Color(1, 1, 1, 1)
 slot/3/right_icon = null
 slot/3/draw_stylebox = true
-script = ExtResource("1_fdmgt")
+slot/4/left_enabled = false
+slot/4/left_type = 0
+slot/4/left_color = Color(1, 1, 1, 1)
+slot/4/left_icon = null
+slot/4/right_enabled = false
+slot/4/right_type = 0
+slot/4/right_color = Color(1, 1, 1, 1)
+slot/4/right_icon = null
+slot/4/draw_stylebox = true
+script = ExtResource("1_8rd3l")
 
 [node name="NextActionLabel" type="Label" parent="."]
 layout_mode = 2
@@ -58,11 +67,15 @@ horizontal_alignment = 1
 layout_mode = 2
 placeholder_text = "Action name"
 
-[node name="CameraSwitchLabel" type="Label" parent="."]
+[node name="CallableDataLabel" type="Label" parent="."]
 layout_mode = 2
-text = "Camera Switch Data"
+text = "Callable Data"
 horizontal_alignment = 1
 
-[node name="CameraNameLineEdit" type="LineEdit" parent="."]
+[node name="RelativeNodePathLineEdit" type="LineEdit" parent="."]
 layout_mode = 2
-placeholder_text = "Camera Name"
+placeholder_text = "Relative Path To Node"
+
+[node name="CallableNameLineEdit" type="LineEdit" parent="."]
+layout_mode = 2
+placeholder_text = "Callable Name"
