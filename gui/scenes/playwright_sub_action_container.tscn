@@ -1,13 +1,13 @@
 [gd_scene load_steps=2 format=3 uid="uid://bybvc8r1117p1"]
 
-[ext_resource type="Script" path="res://addons/playwright/gui/scripts/playwright_action.gd" id="1_podct"]
+[ext_resource type="Script" path="res://addons/playwright/gui/scripts/playwright_sub_action_container.gd" id="1_0emt1"]
 
 [node name="PlaywrightSubActionContainer" type="GraphNode"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
 offset_right = -1606.0
-offset_bottom = -563.0
+offset_bottom = -698.0
 grow_horizontal = 2
 grow_vertical = 2
 title = "Sub-Action Container"
@@ -29,7 +29,25 @@ slot/1/right_type = 0
 slot/1/right_color = Color(1, 1, 1, 1)
 slot/1/right_icon = null
 slot/1/draw_stylebox = true
-script = ExtResource("1_podct")
+slot/2/left_enabled = false
+slot/2/left_type = 0
+slot/2/left_color = Color(1, 1, 1, 1)
+slot/2/left_icon = null
+slot/2/right_enabled = false
+slot/2/right_type = 0
+slot/2/right_color = Color(1, 1, 1, 1)
+slot/2/right_icon = null
+slot/2/draw_stylebox = true
+slot/3/left_enabled = true
+slot/3/left_type = 1
+slot/3/left_color = Color(0.407843, 0.870588, 0.533333, 1)
+slot/3/left_icon = null
+slot/3/right_enabled = false
+slot/3/right_type = 0
+slot/3/right_color = Color(1, 1, 1, 1)
+slot/3/right_icon = null
+slot/3/draw_stylebox = true
+script = ExtResource("1_0emt1")
 
 [node name="NextActionLabel" type="Label" parent="."]
 layout_mode = 2
@@ -39,3 +57,12 @@ horizontal_alignment = 1
 [node name="ActionNameLineEdit" type="LineEdit" parent="."]
 layout_mode = 2
 placeholder_text = "Action name"
+
+[node name="AddSubActionButton" type="Button" parent="."]
+layout_mode = 2
+text = "Add Sub-Action"
+
+[node name="SubActionLabel" type="Label" parent="."]
+layout_mode = 2
+text = "Sub-Action 1"
+horizontal_alignment = 1
