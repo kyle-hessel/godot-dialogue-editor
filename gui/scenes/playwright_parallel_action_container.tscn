@@ -1,8 +1,8 @@
-[gd_scene load_steps=2 format=3 uid="uid://cxnqaf8iekqfu"]
+[gd_scene load_steps=2 format=3 uid="uid://dinx53a85y78p"]
 
-[ext_resource type="Script" path="res://addons/playwright/gui/scripts/playwright_action.gd" id="1_g7bbw"]
+[ext_resource type="Script" path="res://addons/playwright/gui/scripts/playwright_action.gd" id="1_lihap"]
 
-[node name="PlaywrightAction" type="GraphNode"]
+[node name="PlaywrightParallelActionContainer" type="GraphNode"]
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
@@ -10,7 +10,7 @@ offset_right = -1606.0
 offset_bottom = -563.0
 grow_horizontal = 2
 grow_vertical = 2
-title = "Action"
+title = "Parallel Action Container"
 slot/0/left_enabled = true
 slot/0/left_type = 0
 slot/0/left_color = Color(0.87451, 0.239216, 0.270588, 1)
@@ -29,7 +29,7 @@ slot/1/right_type = 0
 slot/1/right_color = Color(1, 1, 1, 1)
 slot/1/right_icon = null
 slot/1/draw_stylebox = true
-script = ExtResource("1_g7bbw")
+script = ExtResource("1_lihap")
 
 [node name="NextActionLabel" type="Label" parent="."]
 layout_mode = 2

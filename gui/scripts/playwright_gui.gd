@@ -26,11 +26,11 @@ var res_prev: EditorResourcePreview = EditorInterface.get_resource_previewer()
 @onready var import_dialogue_button: Button = $ImportDialogueButton
 @onready var serialize_dialogue_button: Button = $SerializeDialogueButton
 
-@onready var cutscene_name_line_edit: LineEdit = $CutsceneNameLineEdit
-@onready var event_option_button: OptionButton = $EventOptionButton
-@onready var add_cutscene_button: Button = $AddCutsceneButton
-@onready var import_cutscene_button: Button = $ImportCutsceneButton
-@onready var serialize_cutscene_button: Button = $SerializeCutsceneButton
+@onready var event_name_line_edit: LineEdit = $EventNameLineEdit
+@onready var action_option_button: OptionButton = $ActionOptionButton
+@onready var add_action_button: Button = $AddActionButton
+@onready var import_event_button: Button = $ImportEventButton
+@onready var serialize_event_button: Button = $SerializeEventButton
 
 @onready var export_dlg_file_dialog: FileDialog = $ExportDlgFileDialog
 @onready var import_dlg_file_dialog: FileDialog = $ImportDlgFileDialog
@@ -79,11 +79,11 @@ func _on_ready():
 	dialogue_edit_controls.append(serialize_dialogue_button)
 	
 	cutscene_edit_controls.append(playwright_graph2)
-	cutscene_edit_controls.append(cutscene_name_line_edit)
-	cutscene_edit_controls.append(event_option_button)
-	cutscene_edit_controls.append(add_cutscene_button)
-	cutscene_edit_controls.append(import_cutscene_button)
-	cutscene_edit_controls.append(serialize_cutscene_button)
+	cutscene_edit_controls.append(event_name_line_edit)
+	cutscene_edit_controls.append(action_option_button)
+	cutscene_edit_controls.append(add_action_button)
+	cutscene_edit_controls.append(import_event_button)
+	cutscene_edit_controls.append(serialize_event_button)
 
 func _on_mode_switch_button_toggled(toggled_on: bool):
 	for d in dialogue_edit_controls:

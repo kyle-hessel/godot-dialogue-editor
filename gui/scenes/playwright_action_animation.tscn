@@ -6,11 +6,11 @@
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_right = -1606.0
-offset_bottom = -563.0
+offset_right = -1632.0
+offset_bottom = -758.0
 grow_horizontal = 2
 grow_vertical = 2
-title = "Event"
+title = "Action"
 slot/0/left_enabled = true
 slot/0/left_type = 0
 slot/0/left_color = Color(0.87451, 0.239216, 0.270588, 1)
@@ -92,7 +92,7 @@ horizontal_alignment = 1
 
 [node name="ActionNameLineEdit" type="LineEdit" parent="."]
 layout_mode = 2
-placeholder_text = "Event name"
+placeholder_text = "Action name"
 
 [node name="AnimationDataLabel" type="Label" parent="."]
 layout_mode = 2
