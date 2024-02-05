@@ -1,16 +1,12 @@
 @tool
-extends GraphNode
+extends PlaywrightAction
+
+class_name PlaywrightSubActionContainer
 
 @onready var sub_action_label: Label = $SubActionLabel
 
-var slot_counter: int = 3
+var slot_counter: int = 4
 var action_counter: int = 1
-
-func _ready():
-	pass
-
-func _process(delta):
-	pass
 
 func _on_add_sub_action_button_pressed():
 	var new_label: Label = sub_action_label.duplicate()
@@ -21,5 +17,5 @@ func _on_add_sub_action_button_pressed():
 	
 	slot_counter += 1
 	set_slot_enabled_left(slot_counter, true)
-	set_slot_color_left(slot_counter, Color(104, 222, 136, 255))
-	set_slot_type_left(slot_counter, 1)
+	set_slot_color_left(slot_counter, get_slot_color_left(2))
+	set_slot_type_left(slot_counter, 0)

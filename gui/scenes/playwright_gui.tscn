@@ -88,12 +88,24 @@ offset_left = 464.0
 offset_top = 12.0
 offset_right = 645.0
 offset_bottom = 44.0
-item_count = 2
+item_count = 8
 selected = 0
 popup/item_0/text = "Animation"
 popup/item_0/id = 0
 popup/item_1/text = "Camera Switch"
 popup/item_1/id = 1
+popup/item_2/text = "Callable"
+popup/item_2/id = 2
+popup/item_3/text = "Dialogue"
+popup/item_3/id = 3
+popup/item_4/text = "Timer"
+popup/item_4/id = 4
+popup/item_5/text = "Sub-Action Container"
+popup/item_5/id = 5
+popup/item_6/text = "Parallel Action Container"
+popup/item_6/id = 6
+popup/item_7/text = "Array Action"
+popup/item_7/id = 7
 
 [node name="AddActionButton" type="Button" parent="."]
 visible = false
@@ -151,7 +163,10 @@ file_mode = 1
 [connection signal="connection_request" from="PlaywrightGraph" to="." method="_on_playwright_graph_connection_request"]
 [connection signal="connection_to_empty" from="PlaywrightGraph" to="." method="_on_playwright_graph_connection_to_empty"]
 [connection signal="disconnection_request" from="PlaywrightGraph" to="." method="_on_playwright_graph_disconnection_request"]
+[connection signal="connection_request" from="PlaywrightGraph2" to="." method="_on_playwright_graph2_connection_request"]
+[connection signal="disconnection_request" from="PlaywrightGraph2" to="." method="_on_playwright_graph2_disconnection_request"]
 [connection signal="toggled" from="ModeSwitchButton" to="." method="_on_mode_switch_button_toggled"]
 [connection signal="pressed" from="AddDialogueButton" to="." method="_on_add_dialogue_button_pressed"]
 [connection signal="pressed" from="SerializeDialogueButton" to="." method="_on_serialize_dialogue_button_pressed"]
 [connection signal="pressed" from="ImportDialogueButton" to="." method="_on_import_dialogue_button_pressed"]
+[connection signal="pressed" from="AddActionButton" to="." method="_on_add_action_button_pressed"]

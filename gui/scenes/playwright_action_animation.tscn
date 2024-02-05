@@ -1,15 +1,20 @@
 [gd_scene load_steps=2 format=3 uid="uid://dildld3owdju7"]
 
-[ext_resource type="Script" path="res://addons/playwright/gui/scripts/playwright_action.gd" id="1_6j25x"]
+[ext_resource type="Script" path="res://addons/playwright/gui/scripts/playwright_action_animation.gd" id="1_30fqv"]
 
-[node name="PlaywrightAction" type="GraphNode"]
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-offset_right = -1632.0
-offset_bottom = -758.0
+[node name="PlaywrightActionAnimation" type="GraphNode"]
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -142.5
+offset_top = -150.5
+offset_right = 142.5
+offset_bottom = 150.5
 grow_horizontal = 2
 grow_vertical = 2
+resizable = true
 title = "Animation Action"
 slot/0/left_enabled = true
 slot/0/left_type = 0
@@ -83,7 +88,7 @@ slot/7/right_type = 0
 slot/7/right_color = Color(1, 1, 1, 1)
 slot/7/right_icon = null
 slot/7/draw_stylebox = true
-script = ExtResource("1_6j25x")
+script = ExtResource("1_30fqv")
 
 [node name="NextActionLabel" type="Label" parent="."]
 layout_mode = 2

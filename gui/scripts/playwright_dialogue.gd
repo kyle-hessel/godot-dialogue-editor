@@ -29,7 +29,6 @@ func _unhandled_input(event: InputEvent):
 		if event is InputEventKey and event.is_pressed():
 			#print(OS.get_keycode_string(event.keycode))
 			if OS.get_keycode_string(event.keycode) == "Escape":
-				var playwright_graph: GraphEdit = get_parent()
 				delete_node.emit(self)
 
 func _on_dialogue_type_option_button_item_selected(index: int):

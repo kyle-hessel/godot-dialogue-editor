@@ -4,6 +4,14 @@ extends Control
 
 #region CONSTANTS
 const PlaywrightDialogue: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_dialogue.tscn")
+const PlaywrightActionAnimation: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_action_animation.tscn")
+const PlaywrightActionCallable: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_action_callable.tscn")
+const PlaywrightActionCamSwitch: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_action_cam_switch.tscn")
+const PlaywrightActionDialogue: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_action_dialogue.tscn")
+const PlaywrightActionTimer: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_action_timer.tscn")
+const PlaywrightParallelActionContainer: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_parallel_action_container.tscn")
+const PlaywrightSubActionContainer: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_sub_action_container.tscn")
+const PlaywrightActionArray: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_action_array.tscn")
 const DLG_OFFSET_INCREMENT_X: float = 300.0
 const DLG_OFFSET_INCREMENT_Y: float = 500.0
 const DLG_TYPE_DEFAULT: int = 0
@@ -40,13 +48,16 @@ signal file_operation_complete
 var dialogue_edit_controls: Array
 var cutscene_edit_controls: Array
 
+var action_nodes: Array[GraphNode]
+var generated_actions: Array[Action]
+
 var dialogue_nodes: Array[GraphNode]
 var generated_dialogues: Array[Dialogue]
 var selected_files: Array
 
 var dlg_offset_x: float = 0
 var dlg_offset_y: float = 0
-var name_increment: int = 0
+var dlg_name_increment: int = 0
 
 func _enter_tree():
 	pass
@@ -91,7 +102,54 @@ func _on_mode_switch_button_toggled(toggled_on: bool):
 	for c in cutscene_edit_controls:
 		c.visible = !c.visible
 
+func _on_add_action_button_pressed():
+	instantiate_action_node(action_option_button.get_selected_id())
 
+func instantiate_action_node(option_idx: int) -> GraphNode:
+	var playwright_action_inst: PlaywrightAction
+	match option_idx:
+		0:
+			playwright_action_inst = PlaywrightActionAnimation.instantiate()
+		1:
+			playwright_action_inst = PlaywrightActionCamSwitch.instantiate()
+		2:
+			playwright_action_inst = PlaywrightActionCallable.instantiate()
+		3:
+			playwright_action_inst = PlaywrightActionDialogue.instantiate()
+		4:
+			playwright_action_inst = PlaywrightActionTimer.instantiate()
+		5:
+			playwright_action_inst = PlaywrightSubActionContainer.instantiate()
+		6:
+			playwright_action_inst = PlaywrightParallelActionContainer.instantiate()
+		7:
+			playwright_action_inst = PlaywrightActionArray.instantiate()
+	
+	playwright_graph2.add_child(playwright_action_inst)
+	action_nodes.append(playwright_action_inst)
+	playwright_action_inst.delete_node.connect(_on_delete_action_node)
+	
+	return playwright_action_inst
+
+func _on_playwright_graph2_connection_request(from_node: StringName, from_port: int, to_node: StringName, to_port: int):
+	playwright_graph2.connect_node(from_node,from_port,	to_node, to_port)
+
+func _on_playwright_graph2_disconnection_request(from_node: StringName, from_port: int, to_node: StringName, to_port: int):
+	playwright_graph2.disconnect_node(from_node, from_port, to_node, to_port)
+
+func _on_delete_action_node(action_node: PlaywrightAction) -> void:
+	var action_connection_list: Array[Dictionary] = playwright_graph2.get_connection_list()
+	
+	action_nodes.erase(action_node)
+	
+	if !action_connection_list.is_empty():
+		for connection: Dictionary in action_connection_list:
+			if connection["from_node"] == action_node.name || connection["to_node"] == action_node.name:
+				playwright_graph2.disconnect_node(connection["from_node"], connection["from_port"], connection["to_node"], connection["to_port"])
+			
+			action_node.queue_free()
+	else:
+		action_node.queue_free()
 
 #region Dialogue Editor Code
 func _on_add_dialogue_button_pressed():
@@ -114,14 +172,14 @@ func instantiate_dialogue_node() -> GraphNode:
 	var playwright_dialogue_inst: GraphNode = PlaywrightDialogue.instantiate()
 	playwright_graph.add_child(playwright_dialogue_inst)
 	dialogue_nodes.append(playwright_dialogue_inst)
-	name_increment += 1
-	playwright_dialogue_inst.name = "PlaywrightDialogue" + str(name_increment)
-	playwright_dialogue_inst.title = dialogue_name_line_edit.text + str(name_increment)
-	playwright_dialogue_inst.delete_node.connect(_on_delete_node)
+	dlg_name_increment += 1
+	playwright_dialogue_inst.name = "PlaywrightDialogue" + str(dlg_name_increment)
+	playwright_dialogue_inst.title = dialogue_name_line_edit.text + str(dlg_name_increment)
+	playwright_dialogue_inst.delete_node.connect(_on_delete_dlg_node)
 	return playwright_dialogue_inst
 
 func import_dialogue_files(file_paths: Array) -> void:
-	name_increment = 0
+	dlg_name_increment = 0
 	# import every dialogue file that was selected.
 	for file_path: String in file_paths:
 		dlg_offset_x = 0.0
@@ -207,7 +265,7 @@ func deserialize_dialogue(dlg_res: Dialogue, out_node_array: Array[GraphNode], o
 	if out_node_array.is_empty():
 		dlg_node_inst.title = dialogue_name_line_edit.text
 	else:
-		dlg_node_inst.title = dialogue_name_line_edit.text + "_" + str(name_increment - 1)
+		dlg_node_inst.title = dialogue_name_line_edit.text + "_" + str(dlg_name_increment - 1)
 	
 	dialogue_nodes.append(dlg_node_inst)
 	out_node_array.append(dlg_node_inst)
@@ -554,7 +612,7 @@ func change_node_port_color(node_name: StringName, port: int, color: Color) -> v
 	dlg_node.get_child(slot_idx)
 	dlg_node.set_slot_color_left(slot_idx, color)
 
-func _on_delete_node(dialogue_node: GraphNode) -> void:
+func _on_delete_dlg_node(dialogue_node: GraphNode) -> void:
 	#print(dialogue_node.name)
 	var dialogue_connection_list: Array[Dictionary] = playwright_graph.get_connection_list()
 	
@@ -569,4 +627,3 @@ func _on_delete_node(dialogue_node: GraphNode) -> void:
 	else:
 		dialogue_node.queue_free()
 #endregion
-
