@@ -111,9 +111,9 @@ popup/item_7/id = 7
 visible = false
 z_index = 1
 layout_mode = 0
-offset_left = 647.0
+offset_left = 656.0
 offset_top = 12.0
-offset_right = 761.0
+offset_right = 770.0
 offset_bottom = 45.0
 text = "Add Action"
 
@@ -121,9 +121,9 @@ text = "Add Action"
 visible = false
 z_index = 1
 layout_mode = 0
-offset_left = 784.0
+offset_left = 794.0
 offset_top = 12.0
-offset_right = 932.0
+offset_right = 942.0
 offset_bottom = 45.0
 text = "Serialize Event"
 
@@ -131,18 +131,18 @@ text = "Serialize Event"
 visible = false
 z_index = 1
 layout_mode = 0
-offset_left = 957.0
+offset_left = 967.0
 offset_top = 12.0
-offset_right = 1094.0
+offset_right = 1104.0
 offset_bottom = 45.0
 text = "Import Event"
 
 [node name="EventNameLineEdit" type="LineEdit" parent="."]
 visible = false
 layout_mode = 0
-offset_left = 1123.0
+offset_left = 1133.0
 offset_top = 12.0
-offset_right = 1340.0
+offset_right = 1350.0
 offset_bottom = 44.0
 placeholder_text = "Event Name"
 
