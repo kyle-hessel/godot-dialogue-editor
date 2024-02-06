@@ -134,10 +134,26 @@ func instantiate_action_node(option_idx: int) -> GraphNode:
 	return playwright_action_inst
 
 func _on_serialize_event_button_pressed():
-	pass # Replace with function body.
+	var action_connection_list: Array[Dictionary] = playwright_graph2.get_connection_list()
+	
+	# if there is an action list, sort action nodes and then serialize them.
+	if action_connection_list.size() > 0:
+		print("Action chain present: sorting action nodes and serializing them.")
+		var sorted_action_node_names: Array[String]
+
+# NOTE: this is a helper function for _on_serialize_event_button_pressed just above.
+# a function that interprets all existing graph node and connection data to extrapolate a sorted array of action node names.
+func sort_action_nodes(connection_list: Array[Dictionary]) -> Array[String]:
+	var sorted_action_node_names: Array[String]
+	return sorted_action_node_names # FIXME: Remove.
+	
+# NOTE: this is a helper function for sort_action_nodes just above.
+# a recursive function that traverses the same array of dictionaries over and over until all action connections have been accounted for.
+func traverse_action_connection_array(action_connections_array: Array[Dictionary], sorted_action_names: Array[String], node_temp: String) -> Array[String]:
+	return sorted_action_names #FIXME: Remove.
 
 func _on_import_event_button_pressed():
-	pass # Replace with function body.
+	pass
 
 func _on_playwright_graph2_connection_request(from_node: StringName, from_port: int, to_node: StringName, to_port: int):
 	playwright_graph2.connect_node(from_node,from_port,	to_node, to_port)
@@ -456,7 +472,7 @@ func filter_dialogue_line_connections(connection_list: Array[Dictionary]) -> Arr
 	
 	return dialogue_line_connections
 
-# NOTE: this is a helper function for _on_serialize_dialogue_button_pressed just above.
+# NOTE: this is a helper function for _on_serialize_dialogue_button_pressed up above.
 # a function that interprets all existing graph node and connection data to extrapolate a sorted array of dialogue node names.
 func sort_dialogue_nodes(connection_list: Array[Dictionary]) -> Array[String]:
 	var sorted_dialogue_node_names: Array[String]
