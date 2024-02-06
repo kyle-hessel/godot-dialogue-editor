@@ -42,6 +42,8 @@ var res_prev: EditorResourcePreview = EditorInterface.get_resource_previewer()
 
 @onready var export_dlg_file_dialog: FileDialog = $ExportDlgFileDialog
 @onready var import_dlg_file_dialog: FileDialog = $ImportDlgFileDialog
+@onready var export_event_file_dialog: FileDialog = $ExportEventFileDialog
+@onready var import_event_file_dialog: FileDialog = $ImportEventFileDialog
 
 signal file_operation_complete
 
@@ -130,6 +132,12 @@ func instantiate_action_node(option_idx: int) -> GraphNode:
 	playwright_action_inst.delete_node.connect(_on_delete_action_node)
 	
 	return playwright_action_inst
+
+func _on_serialize_event_button_pressed():
+	pass # Replace with function body.
+
+func _on_import_event_button_pressed():
+	pass # Replace with function body.
 
 func _on_playwright_graph2_connection_request(from_node: StringName, from_port: int, to_node: StringName, to_port: int):
 	playwright_graph2.connect_node(from_node,from_port,	to_node, to_port)

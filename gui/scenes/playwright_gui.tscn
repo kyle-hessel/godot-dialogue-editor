@@ -152,8 +152,21 @@ initial_position = 2
 size = Vector2i(1080, 720)
 ok_button_text = "Save"
 
+[node name="ExportEventFileDialog" type="FileDialog" parent="."]
+title = "Save Event"
+initial_position = 2
+size = Vector2i(1080, 720)
+ok_button_text = "Save"
+
 [node name="ImportDlgFileDialog" type="FileDialog" parent="."]
-title = "Open File(s)"
+title = "Open Dialogue(s)"
+initial_position = 2
+size = Vector2i(1080, 720)
+ok_button_text = "Open"
+file_mode = 1
+
+[node name="ImportEventFileDialog" type="FileDialog" parent="."]
+title = "Open Event(s)"
 initial_position = 2
 size = Vector2i(1080, 720)
 ok_button_text = "Open"
@@ -170,3 +183,5 @@ file_mode = 1
 [connection signal="pressed" from="SerializeDialogueButton" to="." method="_on_serialize_dialogue_button_pressed"]
 [connection signal="pressed" from="ImportDialogueButton" to="." method="_on_import_dialogue_button_pressed"]
 [connection signal="pressed" from="AddActionButton" to="." method="_on_add_action_button_pressed"]
+[connection signal="pressed" from="SerializeEventButton" to="." method="_on_serialize_event_button_pressed"]
+[connection signal="pressed" from="ImportEventButton" to="." method="_on_import_event_button_pressed"]
