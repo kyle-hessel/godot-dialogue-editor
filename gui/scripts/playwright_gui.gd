@@ -139,18 +139,68 @@ func _on_serialize_event_button_pressed():
 	# if there is an action list, sort action nodes and then serialize them.
 	if action_connection_list.size() > 0:
 		print("Action chain present: sorting action nodes and serializing them.")
-		var sorted_action_node_names: Array[String]
+		var sorted_action_node_names: Array[String] = sort_action_nodes(action_connection_list)
+		
+		# use action node name data to fetch the nodes themselves and transcribe them into an array of action resources.
+		var action_res_array: Array[Action]
+		var last_node_name: String = ""
+		var next_node: GraphNode
+		
+		var action_line_connections: Array[Dictionary] = filter_line_connections(action_connection_list)
+		for node_name_pos: int in sorted_action_node_names.size():
+			var node_path_str: String = "PlaywrightGraph2/" + sorted_action_node_names[node_name_pos]
+			var action_node: GraphNode = get_node(NodePath(node_path_str))
+			if node_name_pos + 1 < sorted_action_node_names.size():
+				next_node = get_node(NodePath("PlaywrightGraph2/" + sorted_action_node_names[node_name_pos + 1]))
+			else: 
+				next_node = null
+			var action: Resource = transcribe_action_node_to_resource(action_node, last_node_name, next_node, action_line_connections)
+			action_res_array.append(action)
+			last_node_name = action_node.name
+		
+		
+		
+	else:
+		pass
 
 # NOTE: this is a helper function for _on_serialize_event_button_pressed just above.
 # a function that interprets all existing graph node and connection data to extrapolate a sorted array of action node names.
 func sort_action_nodes(connection_list: Array[Dictionary]) -> Array[String]:
 	var sorted_action_node_names: Array[String]
-	return sorted_action_node_names # FIXME: Remove.
 	
-# NOTE: this is a helper function for sort_action_nodes just above.
-# a recursive function that traverses the same array of dictionaries over and over until all action connections have been accounted for.
-func traverse_action_connection_array(action_connections_array: Array[Dictionary], sorted_action_names: Array[String], node_temp: String) -> Array[String]:
-	return sorted_action_names #FIXME: Remove.
+	# filter for Action connections only (slot 0).
+	var action_node_connections: Array[Dictionary]
+	for connection: Dictionary in connection_list:
+		if connection["from_port"] == 0 && connection["to_port"] == 0:
+			action_node_connections.append(connection)
+	
+	# convert dictionary data into two separate arrays.
+	var from_nodes: Array[String]
+	var to_nodes: Array[String]
+	for action_connection: Dictionary in action_node_connections:
+		from_nodes.append(action_connection["from_node"])
+		to_nodes.append(action_connection["to_node"])
+	
+	# determine the starting action node by finding the one that doesn't act as a to_node anywhere.
+	var starting_node_name: String
+	for from_node_name: String in from_nodes:
+		var match_found: bool = false
+		for to_node_name: String in to_nodes:
+			if from_node_name == to_node_name:
+				match_found = true
+		if !match_found:
+			starting_node_name = from_node_name
+			break
+	
+	# use the determined starting node as a jumping off point, and sort the rest of the action nodes by pouring over their connection keys until everything is accounted for.
+	var initial_action_name_array: Array[String]
+	initial_action_name_array.append(starting_node_name)
+	var node_temp: String = initial_action_name_array[0]
+	
+	return traverse_node_connection_array(action_node_connections, initial_action_name_array, node_temp)
+
+func transcribe_action_node_to_resource(action_node: GraphNode, last_node_name: String = "", next_node: GraphNode = null, action_line_connections: Array[Dictionary] = []) -> Action:
+	return null
 
 func _on_import_event_button_pressed():
 	pass
@@ -356,7 +406,7 @@ func _on_serialize_dialogue_button_pressed():
 		var last_node_name: String = ""
 		var next_node: GraphNode
 		
-		var dialogue_line_connections: Array[Dictionary] = filter_dialogue_line_connections(dialogue_connection_list)
+		var dialogue_line_connections: Array[Dictionary] = filter_line_connections(dialogue_connection_list)
 		for node_name_pos: int in sorted_dialogue_node_names.size():
 			var node_path_str: String = "PlaywrightGraph/" + sorted_dialogue_node_names[node_name_pos]
 			var dlg_node: GraphNode = get_node(NodePath(node_path_str))
@@ -364,7 +414,7 @@ func _on_serialize_dialogue_button_pressed():
 				next_node = get_node(NodePath("PlaywrightGraph/" + sorted_dialogue_node_names[node_name_pos + 1]))
 			else: 
 				next_node = null
-			var dlg: Resource = transcribe_dialogue_node_to_resource(dlg_node, last_node_name, next_node, dialogue_line_connections)
+			var dlg: Dialogue = transcribe_dialogue_node_to_resource(dlg_node, last_node_name, next_node, dialogue_line_connections)
 			dlg_res_array.append(dlg)
 			last_node_name = dlg_node.name
 		
@@ -463,14 +513,14 @@ func flush_file_dlg_signals(file_dlg: FileDialog, signals: Array[String]):
 		file_dlg.disconnect(sig, signal_list[decrement]["callable"])
 		decrement -= 1 # this may have to change later, but maybe not
 
-func filter_dialogue_line_connections(connection_list: Array[Dictionary]) -> Array[Dictionary]:
-	# filter for dlg line connections only (any slot but 0).
-	var dialogue_line_connections: Array[Dictionary]
+func filter_line_connections(connection_list: Array[Dictionary]) -> Array[Dictionary]:
+	# filter for dlg/action line connections only (any slot but 0).
+	var line_connections: Array[Dictionary]
 	for connection: Dictionary in connection_list:
 		if connection["from_port"] != 0 && connection["to_port"] != 0:
-			dialogue_line_connections.append(connection)
+			line_connections.append(connection)
 	
-	return dialogue_line_connections
+	return line_connections
 
 # NOTE: this is a helper function for _on_serialize_dialogue_button_pressed up above.
 # a function that interprets all existing graph node and connection data to extrapolate a sorted array of dialogue node names.
@@ -506,20 +556,20 @@ func sort_dialogue_nodes(connection_list: Array[Dictionary]) -> Array[String]:
 	initial_dialogue_name_array.append(starting_node_name)
 	var node_temp: String = initial_dialogue_name_array[0]
 	
-	return traverse_dlg_connection_array(dialogue_node_connections, initial_dialogue_name_array, node_temp)
+	return traverse_node_connection_array(dialogue_node_connections, initial_dialogue_name_array, node_temp)
 
-# NOTE: this is a helper function for sort_dialogue_nodes just above.
-# a recursive function that traverses the same array of dictionaries over and over until all dialogue connections have been accounted for.
-func traverse_dlg_connection_array(dlg_connections_array: Array[Dictionary], sorted_dlg_names: Array[String], node_temp: String) -> Array[String]:
-	for dlg_connection: Dictionary in dlg_connections_array:
-		if dlg_connection["from_node"] == node_temp:
-			node_temp = dlg_connection["to_node"]
-			sorted_dlg_names.append(dlg_connection["to_node"])
+# NOTE: this is a helper function for sort_dialogue_nodes and sort_action_nodes.
+# a recursive function that traverses the same array of dictionaries over and over until all dialogue or action connections have been accounted for.
+func traverse_node_connection_array(connections_array: Array[Dictionary], sorted_node_names: Array[String], node_temp: String) -> Array[String]:
+	for node_connection: Dictionary in connections_array:
+		if node_connection["from_node"] == node_temp:
+			node_temp = node_connection["to_node"]
+			sorted_node_names.append(node_connection["to_node"])
 	
-	if sorted_dlg_names.size() - 1 < dlg_connections_array.size():
-		return traverse_dlg_connection_array(dlg_connections_array, sorted_dlg_names, node_temp)
+	if sorted_node_names.size() - 1 < connections_array.size():
+		return traverse_node_connection_array(connections_array, sorted_node_names, node_temp)
 	else:
-		return sorted_dlg_names
+		return sorted_node_names
 
 func transcribe_dialogue_node_to_resource(dlg_node: GraphNode, last_node_name: String = "", next_node: GraphNode = null, dlg_line_connections: Array[Dictionary] = []) -> Dialogue:
 	var dialogue_res: Dialogue = Dialogue.new()
@@ -605,7 +655,7 @@ func append_end_tag_to_string(base_string: String, dlg_lines_pos: int, dlg_node:
 		
 		return base_string
 	else:
-		return ""
+		return base_string
 
 func _on_playwright_graph_connection_request(from_node: StringName, from_port: int, to_node: StringName, to_port: int):
 	playwright_graph.connect_node(from_node, from_port, to_node, to_port)
