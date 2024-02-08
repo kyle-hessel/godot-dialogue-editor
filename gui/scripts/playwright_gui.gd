@@ -201,9 +201,21 @@ func sort_action_nodes(connection_list: Array[Dictionary]) -> Array[String]:
 
 func transcribe_action_node_to_resource(action_node: GraphNode, last_node_name: String = "", next_node: GraphNode = null, action_line_connections: Array[Dictionary] = []) -> Action:
 	var action_res: Action = Action.new()
+	action_res.resource_name = action_node.action_name.text
 	
 	if action_node is PlaywrightActionAnimation:
-		pass
+		var anim_track_data: Array
+		var anim_data: Array
+		
+		anim_track_data.append(action_node.property_name.text)
+		anim_track_data.append(action_node.anim_track.text.to_int())
+		
+		anim_data.append(action_node.node_name.text)
+		anim_data.append(anim_track_data)
+		anim_data.append(action_node.node_local_anim.text)
+		
+		action_res.action[load(action_node.anim_path)] = anim_data
+		
 	elif action_node is PlaywrightActionCamSwitch:
 		pass
 	elif action_node is PlaywrightActionTimer:
@@ -221,7 +233,7 @@ func transcribe_action_node_to_resource(action_node: GraphNode, last_node_name: 
 	else:
 		pass
 	
-	return null #FIXME: Remove
+	return action_res
 
 func _on_import_event_button_pressed():
 	pass
