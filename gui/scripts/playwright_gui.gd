@@ -154,7 +154,7 @@ func _on_serialize_event_button_pressed():
 				next_node = get_node(NodePath("PlaywrightGraph2/" + sorted_action_node_names[node_name_pos + 1]))
 			else: 
 				next_node = null
-			var action: Resource = transcribe_action_node_to_resource(action_node, last_node_name, next_node, action_line_connections)
+			var action: Action = transcribe_action_node_to_resource(action_node, last_node_name, next_node, action_line_connections)
 			action_res_array.append(action)
 			last_node_name = action_node.name
 		
@@ -200,7 +200,28 @@ func sort_action_nodes(connection_list: Array[Dictionary]) -> Array[String]:
 	return traverse_node_connection_array(action_node_connections, initial_action_name_array, node_temp)
 
 func transcribe_action_node_to_resource(action_node: GraphNode, last_node_name: String = "", next_node: GraphNode = null, action_line_connections: Array[Dictionary] = []) -> Action:
-	return null
+	var action_res: Action = Action.new()
+	
+	if action_node is PlaywrightActionAnimation:
+		pass
+	elif action_node is PlaywrightActionCamSwitch:
+		pass
+	elif action_node is PlaywrightActionTimer:
+		pass
+	elif action_node is PlaywrightActionCallable:
+		pass
+	elif action_node is PlaywrightActionDialogue:
+		pass
+	elif action_node is PlaywrightActionArray:
+		pass
+	elif action_node is PlaywrightParallelActionContainer:
+		pass
+	elif action_node is PlaywrightSubActionContainer:
+		pass
+	else:
+		pass
+	
+	return null #FIXME: Remove
 
 func _on_import_event_button_pressed():
 	pass

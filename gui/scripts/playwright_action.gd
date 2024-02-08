@@ -5,6 +5,8 @@ class_name PlaywrightAction
 
 signal delete_node(node: PlaywrightAction)
 
+@onready var action_name: LineEdit = $ActionNameLineEdit
+
 func _ready():
 	resizable = true
 

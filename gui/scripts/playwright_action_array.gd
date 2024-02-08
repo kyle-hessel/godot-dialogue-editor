@@ -1,7 +1,7 @@
 @tool
 extends PlaywrightAction
 
-class_name PlaywrightArrayAction
+class_name PlaywrightActionArray
 
 @onready var array_action_label: Label = $ArrayActionLabel
 @onready var array_option_button: OptionButton = $ArrayOptionButton
