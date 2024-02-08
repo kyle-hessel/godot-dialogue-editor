@@ -203,6 +203,7 @@ func transcribe_action_node_to_resource(action_node: GraphNode, last_node_name: 
 	var action_res: Action = Action.new()
 	action_res.resource_name = action_node.action_name.text
 	
+	# transcription from node to resource data for every node type.
 	if action_node is PlaywrightActionAnimation:
 		var anim_track_data: Array
 		var anim_data: Array
@@ -214,16 +215,20 @@ func transcribe_action_node_to_resource(action_node: GraphNode, last_node_name: 
 		anim_data.append(anim_track_data)
 		anim_data.append(action_node.node_local_anim.text)
 		
-		action_res.action[load(action_node.anim_path)] = anim_data
+		action_res.action[load(action_node.anim_path.text)] = anim_data
 		
 	elif action_node is PlaywrightActionCamSwitch:
-		pass
+		action_res.action[NodePath(action_node.camera_name.text)] = null
+		
 	elif action_node is PlaywrightActionTimer:
-		pass
+		action_res.action[NodePath(action_node.timer_name.text)] = action_node.timer_duration.text.to_int()
+		
 	elif action_node is PlaywrightActionCallable:
-		pass
+		action_res.action[NodePath(action_node.relative_node_path.text)] = action_node.callable_name.text
+		
 	elif action_node is PlaywrightActionDialogue:
-		pass
+		action_res.action[load(action_node.dlg_res_path.text)] = null
+		
 	elif action_node is PlaywrightActionArray:
 		pass
 	elif action_node is PlaywrightParallelActionContainer:

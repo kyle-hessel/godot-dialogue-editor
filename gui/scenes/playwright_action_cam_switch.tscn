@@ -70,4 +70,4 @@ horizontal_alignment = 1
 
 [node name="CameraNameLineEdit" type="LineEdit" parent="."]
 layout_mode = 2
-placeholder_text = "Camera Name"
+placeholder_text = "Camera Name (local path)"
