@@ -143,20 +143,20 @@ func _on_serialize_event_button_pressed():
 		
 		# use action node name data to fetch the nodes themselves and transcribe them into an array of action resources.
 		var action_res_array: Array[Action]
-		var last_node_name: String = ""
-		var next_node: GraphNode
+		#var last_node_name: String = ""
+		#var next_node: GraphNode
 		
 		var action_line_connections: Array[Dictionary] = filter_line_connections(action_connection_list)
 		for node_name_pos: int in sorted_action_node_names.size():
 			var node_path_str: String = "PlaywrightGraph2/" + sorted_action_node_names[node_name_pos]
 			var action_node: GraphNode = get_node(NodePath(node_path_str))
-			if node_name_pos + 1 < sorted_action_node_names.size():
-				next_node = get_node(NodePath("PlaywrightGraph2/" + sorted_action_node_names[node_name_pos + 1]))
-			else: 
-				next_node = null
-			var action: Action = transcribe_action_node_to_resource(action_node, last_node_name, next_node, action_line_connections)
+			#if node_name_pos + 1 < sorted_action_node_names.size():
+				#next_node = get_node(NodePath("PlaywrightGraph2/" + sorted_action_node_names[node_name_pos + 1]))
+			#else: 
+				#next_node = null
+			var action: Action = transcribe_action_node_to_resource(action_node, action_line_connections)
 			action_res_array.append(action)
-			last_node_name = action_node.name
+			#last_node_name = action_node.name
 		
 		
 		
@@ -199,12 +199,53 @@ func sort_action_nodes(connection_list: Array[Dictionary]) -> Array[String]:
 	
 	return traverse_node_connection_array(action_node_connections, initial_action_name_array, node_temp)
 
-func transcribe_action_node_to_resource(action_node: GraphNode, last_node_name: String = "", next_node: GraphNode = null, action_line_connections: Array[Dictionary] = []) -> Action:
+func transcribe_action_node_to_resource(action_node: GraphNode, action_line_connections: Array[Dictionary] = []) -> Action:
 	var action_res: Action = Action.new()
 	action_res.resource_name = action_node.action_name.text
 	
-	# transcription from node to resource data for every node type.
-	if action_node is PlaywrightActionAnimation:
+	# a bit of a weird setup, but this function transcribes any individual action data, and if the action is not of that type, it just returns the resource unmodified before proceeding.
+	action_res = transcribe_individual_action(action_node, action_res)
+		
+	if action_node is PlaywrightActionArray:
+		for action_pos: int in action_node.array_items.size():
+			pass
+		
+	elif action_node is PlaywrightParallelActionContainer:
+		for action_pos: int in action_node.parallel_actions.size():
+			pass
+			
+	elif action_node is PlaywrightSubActionContainer:
+		const SUB_ACTION_CONTAINER_MAIN_ACTION: int = 2
+		const SUB_ACTION_CONTAINER_SLOT_OFFSET: int = 4
+		var sub_action_array: Array[Action]
+		
+		for action_pos: int in action_node.sub_actions.size():
+			var sub_action_res: Action = Action.new()
+			for connection: Dictionary in action_line_connections:
+				# check for main action
+				if playwright_graph2.is_node_connected(connection["from_node"], 0, action_node.name, SUB_ACTION_CONTAINER_MAIN_ACTION):
+					var node_path_str: String = "PlaywrightGraph2/" + connection["from_node"]
+					var main_action_node: GraphNode = get_node(NodePath(node_path_str))
+					action_res = transcribe_individual_action(main_action_node, action_res)
+				
+				# check for sub-actions
+				if playwright_graph2.is_node_connected(connection["from_node"], 0, action_node.name, action_pos + SUB_ACTION_CONTAINER_SLOT_OFFSET):
+					var node_path_str: String = "PlaywrightGraph2/" + connection["from_node"]
+					var child_action_node: GraphNode = get_node(NodePath(node_path_str))
+					sub_action_res = transcribe_individual_action(child_action_node, sub_action_res)
+			
+			sub_action_array.append(sub_action_res)
+		
+		var action_keys: Array = action_res.action.keys()
+		action_res[action_keys[0]] = sub_action_array
+	
+	return action_res
+
+# NOTE: helper function for the above function that processes single actions (anything that isn't a parallel action, sub-action, or array action)
+func transcribe_individual_action(action_node: GraphNode, action_res: Action) -> Action:
+	#region transcription callables
+	
+	var anim_action_transcribe: Callable = func(action_node: GraphNode):
 		var anim_track_data: Array
 		var anim_data: Array
 		
@@ -216,27 +257,35 @@ func transcribe_action_node_to_resource(action_node: GraphNode, last_node_name: 
 		anim_data.append(action_node.node_local_anim.text)
 		
 		action_res.action[load(action_node.anim_path.text)] = anim_data
+	
+	var cam_switch_action_transcribe: Callable = func(action_node: GraphNode):
+		action_res.action[NodePath(action_node.camera_name.text)] = null
+	
+	var timer_action_transcribe: Callable = func(action_node: GraphNode):
+		action_res.action[NodePath(action_node.timer_name.text)] = action_node.timer_duration.text.to_int()
+	
+	var callable_action_transcribe: Callable = func(action_node: GraphNode):
+		action_res.action[NodePath(action_node.relative_node_path.text)] = action_node.callable_name.text
+	
+	var dialogue_action_transcribe: Callable = func(action_node: GraphNode):
+		action_res.action[load(action_node.dlg_res_path.text)] = null
+	#endregion
+	
+	# transcription from node to resource data for every node type.
+	if action_node is PlaywrightActionAnimation:
+		anim_action_transcribe.call(action_node)
 		
 	elif action_node is PlaywrightActionCamSwitch:
-		action_res.action[NodePath(action_node.camera_name.text)] = null
+		cam_switch_action_transcribe.call(action_node)
 		
 	elif action_node is PlaywrightActionTimer:
-		action_res.action[NodePath(action_node.timer_name.text)] = action_node.timer_duration.text.to_int()
+		timer_action_transcribe.call(action_node)
 		
 	elif action_node is PlaywrightActionCallable:
-		action_res.action[NodePath(action_node.relative_node_path.text)] = action_node.callable_name.text
+		callable_action_transcribe.call(action_node)
 		
 	elif action_node is PlaywrightActionDialogue:
-		action_res.action[load(action_node.dlg_res_path.text)] = null
-		
-	elif action_node is PlaywrightActionArray:
-		pass
-	elif action_node is PlaywrightParallelActionContainer:
-		pass
-	elif action_node is PlaywrightSubActionContainer:
-		pass
-	else:
-		pass
+		dialogue_action_transcribe.call(action_node)
 	
 	return action_res
 
