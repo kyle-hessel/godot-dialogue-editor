@@ -6,12 +6,18 @@ class_name PlaywrightActionArray
 @onready var array_action_label: Label = $ArrayActionLabel
 @onready var array_option_button: OptionButton = $ArrayOptionButton
 
+var array_items: Array[Label]
+
 var slot_counter: int = 5
 var action_counter: int = 1
+
+func _ready() -> void:
+	array_items.append(array_action_label)
 
 func _on_add_array_button_pressed():
 	var new_label: Label = array_action_label.duplicate()
 	add_child(new_label)
+	array_items.append(new_label)
 	
 	action_counter += 1
 	new_label.text = "Array Action " + str(action_counter)
