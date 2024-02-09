@@ -205,16 +205,30 @@ func transcribe_action_node_to_resource(action_node: GraphNode, action_line_conn
 	
 	# a bit of a weird setup, but this function transcribes any individual action data, and if the action is not of that type, it just returns the resource unmodified before proceeding.
 	action_res = transcribe_individual_action(action_node, action_res)
-		
+	
 	if action_node is PlaywrightActionArray:
+		const ARRAY_ACTION_CONTAINER_SLOT_OFFSET: int = 5
+		var action_data_array: Array
+		var array_type: int = action_node.array_option_button.selected
 		for action_pos: int in action_node.array_items.size():
-			pass
+			for connection: Dictionary in action_line_connections:
+				if playwright_graph2.is_node_connected(StringName(connection["from_node"]), 0, StringName(action_node.name), action_pos + ARRAY_ACTION_CONTAINER_SLOT_OFFSET):
+					var node_path_str: String = "PlaywrightGraph2/" + connection["from_node"]
+					var array_action_data: GraphNode = get_node(NodePath(node_path_str))
+					match array_type:
+						0: # DIALOGUE
+							if array_action_data is PlaywrightActionDialogue:
+								action_data_array.append(load(array_action_data.dlg_res_path.text))
+						_:
+							pass
+		
+		action_res.action[action_data_array] = null
 		
 	elif action_node is PlaywrightParallelActionContainer:
 		const PARALLEL_ACTION_CONTAINER_SLOT_OFFSET: int = 3
 		for action_pos: int in action_node.parallel_actions.size():
 			for connection: Dictionary in action_line_connections:
-				if playwright_graph2.is_node_connected(connection["from_node"], 0, action_node.name, action_pos + PARALLEL_ACTION_CONTAINER_SLOT_OFFSET):
+				if playwright_graph2.is_node_connected(StringName(connection["from_node"]), 0, StringName(action_node.name), action_pos + PARALLEL_ACTION_CONTAINER_SLOT_OFFSET):
 					var node_path_str: String = "PlaywrightGraph2/" + connection["from_node"]
 					var parallel_action_node: GraphNode = get_node(NodePath(node_path_str))
 					
@@ -229,14 +243,14 @@ func transcribe_action_node_to_resource(action_node: GraphNode, action_line_conn
 			var sub_action_res: Action = Action.new()
 			for connection: Dictionary in action_line_connections:
 				# check for main action
-				if playwright_graph2.is_node_connected(connection["from_node"], 0, action_node.name, SUB_ACTION_CONTAINER_MAIN_ACTION):
+				if playwright_graph2.is_node_connected(StringName(connection["from_node"]), 0, StringName(action_node.name), SUB_ACTION_CONTAINER_MAIN_ACTION):
 					var node_path_str: String = "PlaywrightGraph2/" + connection["from_node"]
 					var main_action_node: GraphNode = get_node(NodePath(node_path_str))
 					
 					action_res = transcribe_individual_action(main_action_node, action_res)
 				
 				# check for sub-actions
-				if playwright_graph2.is_node_connected(connection["from_node"], 0, action_node.name, action_pos + SUB_ACTION_CONTAINER_SLOT_OFFSET):
+				if playwright_graph2.is_node_connected(StringName(connection["from_node"]), 0, StringName(action_node.name), action_pos + SUB_ACTION_CONTAINER_SLOT_OFFSET):
 					var node_path_str: String = "PlaywrightGraph2/" + connection["from_node"]
 					var child_action_node: GraphNode = get_node(NodePath(node_path_str))
 					
