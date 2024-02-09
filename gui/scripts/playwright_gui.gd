@@ -211,9 +211,15 @@ func transcribe_action_node_to_resource(action_node: GraphNode, action_line_conn
 			pass
 		
 	elif action_node is PlaywrightParallelActionContainer:
+		const PARALLEL_ACTION_CONTAINER_SLOT_OFFSET: int = 3
 		for action_pos: int in action_node.parallel_actions.size():
-			pass
-			
+			for connection: Dictionary in action_line_connections:
+				if playwright_graph2.is_node_connected(connection["from_node"], 0, action_node.name, action_pos + PARALLEL_ACTION_CONTAINER_SLOT_OFFSET):
+					var node_path_str: String = "PlaywrightGraph2/" + connection["from_node"]
+					var parallel_action_node: GraphNode = get_node(NodePath(node_path_str))
+					
+					action_res = transcribe_individual_action(parallel_action_node, action_res)
+		
 	elif action_node is PlaywrightSubActionContainer:
 		const SUB_ACTION_CONTAINER_MAIN_ACTION: int = 2
 		const SUB_ACTION_CONTAINER_SLOT_OFFSET: int = 4
@@ -226,12 +232,14 @@ func transcribe_action_node_to_resource(action_node: GraphNode, action_line_conn
 				if playwright_graph2.is_node_connected(connection["from_node"], 0, action_node.name, SUB_ACTION_CONTAINER_MAIN_ACTION):
 					var node_path_str: String = "PlaywrightGraph2/" + connection["from_node"]
 					var main_action_node: GraphNode = get_node(NodePath(node_path_str))
+					
 					action_res = transcribe_individual_action(main_action_node, action_res)
 				
 				# check for sub-actions
 				if playwright_graph2.is_node_connected(connection["from_node"], 0, action_node.name, action_pos + SUB_ACTION_CONTAINER_SLOT_OFFSET):
 					var node_path_str: String = "PlaywrightGraph2/" + connection["from_node"]
 					var child_action_node: GraphNode = get_node(NodePath(node_path_str))
+					
 					sub_action_res = transcribe_individual_action(child_action_node, sub_action_res)
 			
 			sub_action_array.append(sub_action_res)
