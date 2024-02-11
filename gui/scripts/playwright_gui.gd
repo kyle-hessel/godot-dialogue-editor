@@ -149,7 +149,7 @@ func _on_serialize_event_button_pressed():
 		#var last_node_name: String = ""
 		#var next_node: GraphNode
 		
-		var action_line_connections: Array[Dictionary] = filter_line_connections(action_connection_list)
+		var action_line_connections: Array[Dictionary] = filter_line_connections_action(action_connection_list)
 		for node_name_pos: int in sorted_action_node_names.size():
 			var node_path_str: String = "PlaywrightGraph2/" + sorted_action_node_names[node_name_pos]
 			var action_node: GraphNode = get_node(NodePath(node_path_str))
@@ -214,12 +214,11 @@ func transcribe_action_node_to_resource(action_node: GraphNode, action_line_conn
 	action_res = transcribe_individual_action(action_node, action_res)
 	
 	if action_node is PlaywrightActionArray:
-		const ARRAY_ACTION_CONTAINER_SLOT_OFFSET: int = 5
 		var action_data_array: Array
 		var array_type: int = action_node.array_option_button.selected
 		for action_pos: int in action_node.array_items.size():
 			for connection: Dictionary in action_line_connections:
-				if playwright_graph2.is_node_connected(StringName(connection["from_node"]), 0, StringName(action_node.name), action_pos + ARRAY_ACTION_CONTAINER_SLOT_OFFSET):
+				if playwright_graph2.is_node_connected(StringName(connection["from_node"]), 0, StringName(action_node.name), action_pos + 1):
 					var node_path_str: String = "PlaywrightGraph2/" + connection["from_node"]
 					var array_action_data: GraphNode = get_node(NodePath(node_path_str))
 					match array_type:
@@ -233,32 +232,29 @@ func transcribe_action_node_to_resource(action_node: GraphNode, action_line_conn
 		action_res.action[action_data_array] = null
 		
 	elif action_node is PlaywrightParallelActionContainer:
-		const PARALLEL_ACTION_CONTAINER_SLOT_OFFSET: int = 3
 		for action_pos: int in action_node.parallel_actions.size():
 			for connection: Dictionary in action_line_connections:
-				if playwright_graph2.is_node_connected(StringName(connection["from_node"]), 0, StringName(action_node.name), action_pos + PARALLEL_ACTION_CONTAINER_SLOT_OFFSET):
+				if playwright_graph2.is_node_connected(StringName(connection["from_node"]), 0, StringName(action_node.name), action_pos + 1):
 					var node_path_str: String = "PlaywrightGraph2/" + connection["from_node"]
 					var parallel_action_node: GraphNode = get_node(NodePath(node_path_str))
 					
 					action_res = transcribe_individual_action(parallel_action_node, action_res)
 		
 	elif action_node is PlaywrightSubActionContainer:
-		const SUB_ACTION_CONTAINER_MAIN_ACTION: int = 2
-		const SUB_ACTION_CONTAINER_SLOT_OFFSET: int = 4
-		var sub_action_array: Array[Action]
+		var sub_action_array: Array
 		
 		for action_pos: int in action_node.sub_actions.size():
 			var sub_action_res: Action = Action.new()
 			for connection: Dictionary in action_line_connections:
 				# check for main action
-				if playwright_graph2.is_node_connected(StringName(connection["from_node"]), 0, StringName(action_node.name), SUB_ACTION_CONTAINER_MAIN_ACTION):
+				if playwright_graph2.is_node_connected(StringName(connection["from_node"]), 0, StringName(action_node.name), 1):
 					var node_path_str: String = "PlaywrightGraph2/" + connection["from_node"]
 					var main_action_node: GraphNode = get_node(NodePath(node_path_str))
 					
 					action_res = transcribe_individual_action(main_action_node, action_res)
 				
 				# check for sub-actions
-				if playwright_graph2.is_node_connected(StringName(connection["from_node"]), 0, StringName(action_node.name), action_pos + SUB_ACTION_CONTAINER_SLOT_OFFSET):
+				if playwright_graph2.is_node_connected(StringName(connection["from_node"]), 0, StringName(action_node.name), action_pos + 2):
 					var node_path_str: String = "PlaywrightGraph2/" + connection["from_node"]
 					var child_action_node: GraphNode = get_node(NodePath(node_path_str))
 					
@@ -552,7 +548,7 @@ func _on_serialize_dialogue_button_pressed():
 		var last_node_name: String = ""
 		var next_node: GraphNode
 		
-		var dialogue_line_connections: Array[Dictionary] = filter_line_connections(dialogue_connection_list)
+		var dialogue_line_connections: Array[Dictionary] = filter_line_connections_dlg(dialogue_connection_list)
 		for node_name_pos: int in sorted_dialogue_node_names.size():
 			var node_path_str: String = "PlaywrightGraph/" + sorted_dialogue_node_names[node_name_pos]
 			var dlg_node: GraphNode = get_node(NodePath(node_path_str))
@@ -659,11 +655,20 @@ func flush_file_dlg_signals(file_dlg: FileDialog, signals: Array[String]):
 		file_dlg.disconnect(sig, signal_list[decrement]["callable"])
 		decrement -= 1 # this may have to change later, but maybe not
 
-func filter_line_connections(connection_list: Array[Dictionary]) -> Array[Dictionary]:
-	# filter for dlg/action line connections only (any slot but 0).
+func filter_line_connections_dlg(connection_list: Array[Dictionary]) -> Array[Dictionary]:
+	# filter for dlg line connections only (any slot but 0).
 	var line_connections: Array[Dictionary]
 	for connection: Dictionary in connection_list:
 		if connection["from_port"] != 0 && connection["to_port"] != 0:
+			line_connections.append(connection)
+	
+	return line_connections
+
+func filter_line_connections_action(connection_list: Array[Dictionary]) -> Array[Dictionary]:
+	# filter for action line connections only (0 on left, any other slot on right).
+	var line_connections: Array[Dictionary]
+	for connection: Dictionary in connection_list:
+		if connection["from_port"] == 0 && connection["to_port"] != 0:
 			line_connections.append(connection)
 	
 	return line_connections
