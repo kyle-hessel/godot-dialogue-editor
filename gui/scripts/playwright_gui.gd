@@ -241,7 +241,7 @@ func transcribe_action_node_to_resource(action_node: GraphNode, action_line_conn
 					action_res = transcribe_individual_action(parallel_action_node, action_res)
 		
 	elif action_node is PlaywrightSubActionContainer:
-		var sub_action_array: Array
+		var sub_action_array: Array[Action]
 		
 		for action_pos: int in action_node.sub_actions.size():
 			var sub_action_res: Action = Action.new()
@@ -263,7 +263,7 @@ func transcribe_action_node_to_resource(action_node: GraphNode, action_line_conn
 			sub_action_array.append(sub_action_res)
 		
 		var action_keys: Array = action_res.action.keys()
-		action_res[action_keys[0]] = sub_action_array
+		action_res.action[action_keys[0]] = sub_action_array
 	
 	return action_res
 
