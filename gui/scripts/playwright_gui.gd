@@ -139,6 +139,9 @@ func _on_serialize_event_button_pressed():
 	# if there is an action list, sort action nodes and then serialize them.
 	if action_connection_list.size() > 0:
 		print("Action chain present: sorting action nodes and serializing them.")
+		var event_res: Event = Event.new()
+		event_res.event_name = event_name_line_edit.text
+		event_res.resource_name = event_name_line_edit.text
 		var sorted_action_node_names: Array[String] = sort_action_nodes(action_connection_list)
 		
 		# use action node name data to fetch the nodes themselves and transcribe them into an array of action resources.
@@ -158,10 +161,14 @@ func _on_serialize_event_button_pressed():
 			action_res_array.append(action)
 			#last_node_name = action_node.name
 		
+		event_res.actions = action_res_array
 		
+		# save the event resource to disk.
+		save_event_res_to_disk(event_res, event_name_line_edit.text)
+		await file_operation_complete
 		
 	else:
-		pass
+		print("No action chain found, aborting event serialization.")
 
 # NOTE: this is a helper function for _on_serialize_event_button_pressed just above.
 # a function that interprets all existing graph node and connection data to extrapolate a sorted array of action node names.
@@ -219,6 +226,7 @@ func transcribe_action_node_to_resource(action_node: GraphNode, action_line_conn
 						0: # DIALOGUE
 							if array_action_data is PlaywrightActionDialogue:
 								action_data_array.append(load(array_action_data.dlg_res_path.text))
+						# other types here, down the line (if necessary)
 						_:
 							pass
 		
@@ -310,6 +318,35 @@ func transcribe_individual_action(action_node: GraphNode, action_res: Action) ->
 		dialogue_action_transcribe.call(action_node)
 	
 	return action_res
+
+func save_event_res_to_disk(event_res: Event, res_name: String):
+	var event_filename: String = res_name + ".tres"
+	export_event_file_dialog.current_path = event_filename
+	
+	var confirmed_func: Callable = func():
+		var save_result: Error = ResourceSaver.save(event_res, export_event_file_dialog.current_path)
+		
+		if save_result != OK:
+			print(save_result)
+		else:
+			# there isn't an easy fix for immediate resource updating upon overwrite, see: https://github.com/godotengine/godot/issues/30302
+			# but, relaunching the editor or sometimes clicking around a bit afterwards does the job.
+			fs.update_file(export_event_file_dialog.current_path)
+			print("File saved!")
+		
+		flush_file_dlg_signals(export_event_file_dialog, ["confirmed", "canceled"])
+		file_operation_complete.emit()
+	
+	var canceled_func: Callable = func():
+		print("File save aborted.")
+		
+		flush_file_dlg_signals(export_event_file_dialog, ["confirmed", "canceled"])
+		file_operation_complete.emit()
+	
+	export_event_file_dialog.confirmed.connect(confirmed_func)
+	export_event_file_dialog.canceled.connect(canceled_func)
+	
+	export_event_file_dialog.visible = true
 
 func _on_import_event_button_pressed():
 	pass
