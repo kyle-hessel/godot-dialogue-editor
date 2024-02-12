@@ -24,136 +24,44 @@ show_grid = false
 snapping_enabled = false
 right_disconnects = true
 
-[node name="PlaywrightGraph2" type="GraphEdit" parent="."]
-visible = false
-layout_mode = 1
-anchors_preset = 15
-anchor_right = 1.0
-anchor_bottom = 1.0
-grow_horizontal = 2
-grow_vertical = 2
-size_flags_vertical = 3
-show_grid = false
-snapping_enabled = false
-right_disconnects = true
-
-[node name="ModeSwitchButton" type="CheckButton" parent="."]
-layout_mode = 0
-offset_left = 337.0
-offset_top = 13.0
-offset_right = 429.0
-offset_bottom = 44.0
-text = "Mode"
-
 [node name="AddDialogueButton" type="Button" parent="."]
 z_index = 1
 layout_mode = 0
-offset_left = 462.0
+offset_left = 340.0
 offset_top = 12.0
-offset_right = 573.0
+offset_right = 451.0
 offset_bottom = 45.0
 text = "Add Dialogue"
 
 [node name="SerializeDialogueButton" type="Button" parent="."]
 z_index = 1
 layout_mode = 0
-offset_left = 599.0
+offset_left = 477.0
 offset_top = 12.0
-offset_right = 744.0
+offset_right = 622.0
 offset_bottom = 45.0
 text = "Serialize Dialogue"
 
 [node name="ImportDialogueButton" type="Button" parent="."]
 z_index = 1
 layout_mode = 0
-offset_left = 772.0
+offset_left = 650.0
 offset_top = 12.0
-offset_right = 906.0
+offset_right = 784.0
 offset_bottom = 45.0
 text = "Import Dialogue
 "
 
 [node name="DialogueNameLineEdit" type="LineEdit" parent="."]
 layout_mode = 0
-offset_left = 938.0
+offset_left = 816.0
 offset_top = 12.0
-offset_right = 1155.0
+offset_right = 1033.0
 offset_bottom = 44.0
 placeholder_text = "Dialogue Name"
 
-[node name="ActionOptionButton" type="OptionButton" parent="."]
-visible = false
-layout_mode = 0
-offset_left = 464.0
-offset_top = 12.0
-offset_right = 645.0
-offset_bottom = 44.0
-item_count = 8
-selected = 0
-popup/item_0/text = "Animation"
-popup/item_0/id = 0
-popup/item_1/text = "Camera Switch"
-popup/item_1/id = 1
-popup/item_2/text = "Callable"
-popup/item_2/id = 2
-popup/item_3/text = "Dialogue"
-popup/item_3/id = 3
-popup/item_4/text = "Timer"
-popup/item_4/id = 4
-popup/item_5/text = "Sub-Action Container"
-popup/item_5/id = 5
-popup/item_6/text = "Parallel Action Container"
-popup/item_6/id = 6
-popup/item_7/text = "Array Action"
-popup/item_7/id = 7
-
-[node name="AddActionButton" type="Button" parent="."]
-visible = false
-z_index = 1
-layout_mode = 0
-offset_left = 656.0
-offset_top = 12.0
-offset_right = 770.0
-offset_bottom = 45.0
-text = "Add Action"
-
-[node name="SerializeEventButton" type="Button" parent="."]
-visible = false
-z_index = 1
-layout_mode = 0
-offset_left = 794.0
-offset_top = 12.0
-offset_right = 942.0
-offset_bottom = 45.0
-text = "Serialize Event"
-
-[node name="ImportEventButton" type="Button" parent="."]
-visible = false
-z_index = 1
-layout_mode = 0
-offset_left = 967.0
-offset_top = 12.0
-offset_right = 1104.0
-offset_bottom = 45.0
-text = "Import Event"
-
-[node name="EventNameLineEdit" type="LineEdit" parent="."]
-visible = false
-layout_mode = 0
-offset_left = 1133.0
-offset_top = 12.0
-offset_right = 1350.0
-offset_bottom = 44.0
-placeholder_text = "Event Name"
-
 [node name="ExportDlgFileDialog" type="FileDialog" parent="."]
 title = "Save Dialogue"
-initial_position = 2
-size = Vector2i(1080, 720)
-ok_button_text = "Save"
-
-[node name="ExportEventFileDialog" type="FileDialog" parent="."]
-title = "Save Event"
 initial_position = 2
 size = Vector2i(1080, 720)
 ok_button_text = "Save"
@@ -165,23 +73,10 @@ size = Vector2i(1080, 720)
 ok_button_text = "Open"
 file_mode = 1
 
-[node name="ImportEventFileDialog" type="FileDialog" parent="."]
-title = "Open File(s)"
-initial_position = 2
-size = Vector2i(1080, 720)
-ok_button_text = "Open"
-file_mode = 1
-
 [connection signal="ready" from="." to="." method="_on_ready"]
 [connection signal="connection_request" from="PlaywrightGraph" to="." method="_on_playwright_graph_connection_request"]
 [connection signal="connection_to_empty" from="PlaywrightGraph" to="." method="_on_playwright_graph_connection_to_empty"]
 [connection signal="disconnection_request" from="PlaywrightGraph" to="." method="_on_playwright_graph_disconnection_request"]
-[connection signal="connection_request" from="PlaywrightGraph2" to="." method="_on_playwright_graph2_connection_request"]
-[connection signal="disconnection_request" from="PlaywrightGraph2" to="." method="_on_playwright_graph2_disconnection_request"]
-[connection signal="toggled" from="ModeSwitchButton" to="." method="_on_mode_switch_button_toggled"]
 [connection signal="pressed" from="AddDialogueButton" to="." method="_on_add_dialogue_button_pressed"]
 [connection signal="pressed" from="SerializeDialogueButton" to="." method="_on_serialize_dialogue_button_pressed"]
 [connection signal="pressed" from="ImportDialogueButton" to="." method="_on_import_dialogue_button_pressed"]
-[connection signal="pressed" from="AddActionButton" to="." method="_on_add_action_button_pressed"]
-[connection signal="pressed" from="SerializeEventButton" to="." method="_on_serialize_event_button_pressed"]
-[connection signal="pressed" from="ImportEventButton" to="." method="_on_import_event_button_pressed"]

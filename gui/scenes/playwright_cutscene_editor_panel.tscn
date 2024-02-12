@@ -1,7 +1,0 @@
-[gd_scene format=3 uid="uid://yd65xbfmslvm"]
-
-[node name="CutsceneEditorPanel" type="PanelContainer"]
-offset_left = 189.0
-offset_top = 89.0
-offset_right = 1892.0
-offset_bottom = 1051.0

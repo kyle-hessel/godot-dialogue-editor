@@ -4,14 +4,6 @@ extends Control
 
 #region CONSTANTS
 const PlaywrightDialogue: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_dialogue.tscn")
-const PlaywrightActionAnimation: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_action_animation.tscn")
-const PlaywrightActionCallable: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_action_callable.tscn")
-const PlaywrightActionCamSwitch: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_action_cam_switch.tscn")
-const PlaywrightActionDialogue: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_action_dialogue.tscn")
-const PlaywrightActionTimer: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_action_timer.tscn")
-const PlaywrightParallelActionContainer: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_parallel_action_container.tscn")
-const PlaywrightSubActionContainer: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_sub_action_container.tscn")
-const PlaywrightActionArray: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_action_array.tscn")
 const DLG_OFFSET_INCREMENT_X: int = 300
 const DLG_OFFSET_INCREMENT_Y: int = 500
 const DLG_TYPE_DEFAULT: int = 0
@@ -19,41 +11,24 @@ const DLG_TYPE_RESPONSE: int = 1
 const DLG_TYPE_CALL: int = 2
 const DLG_TYPE_MESSAGE: int = 3
 const DLG_TYPE_SHOUT: int = 4
-const ACTION_OFFSET_INCREMENT_X: int = 500
-const ACTION_OFFSET_INCREMENT_Y: int = 600
 #endregion
 
 var fs: EditorFileSystem = EditorInterface.get_resource_filesystem()
 var res_prev: EditorResourcePreview = EditorInterface.get_resource_previewer()
 
 @onready var playwright_graph: GraphEdit = $PlaywrightGraph # dialogue editor
-@onready var playwright_graph2: GraphEdit = $PlaywrightGraph2 # cutscene editor
-
-@onready var mode_switch_button: CheckButton = $ModeSwitchButton
 
 @onready var dialogue_name_line_edit: LineEdit = $DialogueNameLineEdit
 @onready var add_dialogue_button: Button = $AddDialogueButton
 @onready var import_dialogue_button: Button = $ImportDialogueButton
 @onready var serialize_dialogue_button: Button = $SerializeDialogueButton
 
-@onready var event_name_line_edit: LineEdit = $EventNameLineEdit
-@onready var action_option_button: OptionButton = $ActionOptionButton
-@onready var add_action_button: Button = $AddActionButton
-@onready var import_event_button: Button = $ImportEventButton
-@onready var serialize_event_button: Button = $SerializeEventButton
-
 @onready var export_dlg_file_dialog: FileDialog = $ExportDlgFileDialog
 @onready var import_dlg_file_dialog: FileDialog = $ImportDlgFileDialog
-@onready var export_event_file_dialog: FileDialog = $ExportEventFileDialog
-@onready var import_event_file_dialog: FileDialog = $ImportEventFileDialog
 
 signal file_operation_complete
 
 var dialogue_edit_controls: Array
-var cutscene_edit_controls: Array
-
-var action_nodes: Array[GraphNode]
-var generated_actions: Array[Action]
 
 var dialogue_nodes: Array[GraphNode]
 var generated_dialogues: Array[Dialogue]
@@ -62,8 +37,6 @@ var selected_files: Array
 var dlg_offset_x: int = 0
 var dlg_offset_y: int = 0
 var dlg_name_increment: int = 0
-
-var action_offset_x: int = 0
 
 func _enter_tree():
 	pass
@@ -89,390 +62,11 @@ func _on_ready():
 			import_dialogue_files(selected_files)
 	)
 	
-	# handle ImportEventFileDialog if one file is selected (multiple isn't supported).
-	import_event_file_dialog.file_selected.connect(
-		func(file_path: String):
-			import_event_file(file_path)
-	)
-	
 	dialogue_edit_controls.append(playwright_graph)
 	dialogue_edit_controls.append(dialogue_name_line_edit)
 	dialogue_edit_controls.append(add_dialogue_button)
 	dialogue_edit_controls.append(import_dialogue_button)
 	dialogue_edit_controls.append(serialize_dialogue_button)
-	
-	cutscene_edit_controls.append(playwright_graph2)
-	cutscene_edit_controls.append(event_name_line_edit)
-	cutscene_edit_controls.append(action_option_button)
-	cutscene_edit_controls.append(add_action_button)
-	cutscene_edit_controls.append(import_event_button)
-	cutscene_edit_controls.append(serialize_event_button)
-
-func _on_mode_switch_button_toggled(toggled_on: bool):
-	for d in dialogue_edit_controls:
-		d.visible = !d.visible
-	for c in cutscene_edit_controls:
-		c.visible = !c.visible
-
-#region event editor code
-func _on_add_action_button_pressed():
-	instantiate_action_node(action_option_button.get_selected_id())
-
-func instantiate_action_node(option_idx: int) -> GraphNode:
-	var playwright_action_inst: PlaywrightAction
-	match option_idx:
-		0:
-			playwright_action_inst = PlaywrightActionAnimation.instantiate()
-		1:
-			playwright_action_inst = PlaywrightActionCamSwitch.instantiate()
-		2:
-			playwright_action_inst = PlaywrightActionCallable.instantiate()
-		3:
-			playwright_action_inst = PlaywrightActionDialogue.instantiate()
-		4:
-			playwright_action_inst = PlaywrightActionTimer.instantiate()
-		5:
-			playwright_action_inst = PlaywrightSubActionContainer.instantiate()
-		6:
-			playwright_action_inst = PlaywrightParallelActionContainer.instantiate()
-		7:
-			playwright_action_inst = PlaywrightActionArray.instantiate()
-	
-	playwright_graph2.add_child(playwright_action_inst)
-	action_nodes.append(playwright_action_inst)
-	playwright_action_inst.delete_node.connect(_on_delete_action_node)
-	
-	return playwright_action_inst
-
-func _on_serialize_event_button_pressed():
-	var action_connection_list: Array[Dictionary] = playwright_graph2.get_connection_list()
-	
-	# if there is an action list, sort action nodes and then serialize them.
-	if action_connection_list.size() > 0:
-		print("Action chain present: sorting action nodes and serializing them.")
-		var event_res: Event = Event.new()
-		event_res.event_name = event_name_line_edit.text
-		event_res.resource_name = event_name_line_edit.text
-		var sorted_action_node_names: Array[String] = sort_action_nodes(action_connection_list)
-		
-		# use action node name data to fetch the nodes themselves and transcribe them into an array of action resources.
-		var action_res_array: Array[Action]
-		#var last_node_name: String = ""
-		#var next_node: GraphNode
-		
-		var action_line_connections: Array[Dictionary] = filter_line_connections_action(action_connection_list)
-		for node_name_pos: int in sorted_action_node_names.size():
-			var node_path_str: String = "PlaywrightGraph2/" + sorted_action_node_names[node_name_pos]
-			var action_node: GraphNode = get_node(NodePath(node_path_str))
-			#if node_name_pos + 1 < sorted_action_node_names.size():
-				#next_node = get_node(NodePath("PlaywrightGraph2/" + sorted_action_node_names[node_name_pos + 1]))
-			#else: 
-				#next_node = null
-			var action: Action = transcribe_action_node_to_resource(action_node, action_line_connections)
-			action_res_array.append(action)
-			#last_node_name = action_node.name
-		
-		event_res.actions = action_res_array
-		
-		# save the event resource to disk.
-		save_event_res_to_disk(event_res, event_name_line_edit.text)
-		await file_operation_complete
-		
-	else:
-		print("No action chain found, aborting event serialization.")
-
-# NOTE: this is a helper function for _on_serialize_event_button_pressed just above.
-# a function that interprets all existing graph node and connection data to extrapolate a sorted array of action node names.
-func sort_action_nodes(connection_list: Array[Dictionary]) -> Array[String]:
-	var sorted_action_node_names: Array[String]
-	
-	# filter for Action connections only (slot 0).
-	var action_node_connections: Array[Dictionary]
-	for connection: Dictionary in connection_list:
-		if connection["from_port"] == 0 && connection["to_port"] == 0:
-			action_node_connections.append(connection)
-	
-	# convert dictionary data into two separate arrays.
-	var from_nodes: Array[String]
-	var to_nodes: Array[String]
-	for action_connection: Dictionary in action_node_connections:
-		from_nodes.append(action_connection["from_node"])
-		to_nodes.append(action_connection["to_node"])
-	
-	# determine the starting action node by finding the one that doesn't act as a to_node anywhere.
-	var starting_node_name: String
-	for from_node_name: String in from_nodes:
-		var match_found: bool = false
-		for to_node_name: String in to_nodes:
-			if from_node_name == to_node_name:
-				match_found = true
-		if !match_found:
-			starting_node_name = from_node_name
-			break
-	
-	# use the determined starting node as a jumping off point, and sort the rest of the action nodes by pouring over their connection keys until everything is accounted for.
-	var initial_action_name_array: Array[String]
-	initial_action_name_array.append(starting_node_name)
-	var node_temp: String = initial_action_name_array[0]
-	
-	return traverse_node_connection_array(action_node_connections, initial_action_name_array, node_temp)
-
-func transcribe_action_node_to_resource(action_node: GraphNode, action_line_connections: Array[Dictionary] = []) -> Action:
-	var action_res: Action = Action.new()
-	action_res.resource_name = action_node.action_name.text
-	
-	# a bit of a weird setup, but this function transcribes any individual action data, and if the action is not of that type, it just returns the resource unmodified before proceeding.
-	action_res = transcribe_individual_action(action_node, action_res)
-	
-	if action_node is PlaywrightActionArray:
-		action_res.resource_name += "_arr"
-		var action_data_array: Array
-		var array_type: int = action_node.array_option_button.selected
-		for action_pos: int in action_node.array_items.size():
-			for connection: Dictionary in action_line_connections:
-				if playwright_graph2.is_node_connected(StringName(connection["from_node"]), 0, StringName(action_node.name), action_pos + 1):
-					var node_path_str: String = "PlaywrightGraph2/" + connection["from_node"]
-					var array_action_data: GraphNode = get_node(NodePath(node_path_str))
-					match array_type:
-						0: # DIALOGUE
-							if array_action_data is PlaywrightActionDialogue:
-								action_data_array.append(load(array_action_data.dlg_res_path.text))
-						# other types here, down the line (if necessary)
-						_:
-							pass
-		
-		action_res.action[action_data_array] = null
-		
-	elif action_node is PlaywrightParallelActionContainer:
-		action_res.resource_name += "_par"
-		for action_pos: int in action_node.parallel_actions.size():
-			for connection: Dictionary in action_line_connections:
-				if playwright_graph2.is_node_connected(StringName(connection["from_node"]), 0, StringName(action_node.name), action_pos + 1):
-					var node_path_str: String = "PlaywrightGraph2/" + connection["from_node"]
-					var parallel_action_node: GraphNode = get_node(NodePath(node_path_str))
-					
-					action_res = transcribe_individual_action(parallel_action_node, action_res)
-		
-	elif action_node is PlaywrightSubActionContainer:
-		action_res.resource_name += "_sub"
-		var sub_action_array: Array[Action]
-		
-		for action_pos: int in action_node.sub_actions.size():
-			var sub_action_res: Action = Action.new()
-			for connection: Dictionary in action_line_connections:
-				# check for main action
-				if playwright_graph2.is_node_connected(StringName(connection["from_node"]), 0, StringName(action_node.name), 1):
-					var node_path_str: String = "PlaywrightGraph2/" + connection["from_node"]
-					var main_action_node: GraphNode = get_node(NodePath(node_path_str))
-					
-					action_res = transcribe_individual_action(main_action_node, action_res)
-				
-				# check for sub-actions
-				if playwright_graph2.is_node_connected(StringName(connection["from_node"]), 0, StringName(action_node.name), action_pos + 2):
-					var node_path_str: String = "PlaywrightGraph2/" + connection["from_node"]
-					var child_action_node: GraphNode = get_node(NodePath(node_path_str))
-					
-					sub_action_res = transcribe_individual_action(child_action_node, sub_action_res)
-					sub_action_res.resource_name = child_action_node.action_name.text
-			
-			sub_action_array.append(sub_action_res)
-		
-		var action_keys: Array = action_res.action.keys()
-		action_res.action[action_keys[0]] = sub_action_array
-	
-	return action_res
-
-# NOTE: helper function for the above function that processes single actions (anything that isn't a parallel action, sub-action, or array action)
-func transcribe_individual_action(action_node: GraphNode, action_res: Action) -> Action:
-	#region transcription callables
-	
-	var anim_action_transcribe: Callable = func(action_node: GraphNode):
-		var anim_track_data: Array
-		var anim_data: Array
-		
-		anim_track_data.append(action_node.property_name.text)
-		anim_track_data.append(action_node.anim_track.text.to_int())
-		
-		anim_data.append(action_node.node_name.text)
-		anim_data.append(anim_track_data)
-		anim_data.append(action_node.node_local_anim.text)
-		
-		action_res.action[load(action_node.anim_path.text)] = anim_data
-	
-	var cam_switch_action_transcribe: Callable = func(action_node: GraphNode):
-		action_res.action[NodePath(action_node.camera_name.text)] = null
-	
-	var timer_action_transcribe: Callable = func(action_node: GraphNode):
-		action_res.action[NodePath(action_node.timer_name.text)] = action_node.timer_duration.text.to_int()
-	
-	var callable_action_transcribe: Callable = func(action_node: GraphNode):
-		action_res.action[NodePath(action_node.relative_node_path.text)] = action_node.callable_name.text
-	
-	var dialogue_action_transcribe: Callable = func(action_node: GraphNode):
-		action_res.action[load(action_node.dlg_res_path.text)] = null
-	#endregion
-	
-	# transcription from node to resource data for every node type.
-	if action_node is PlaywrightActionAnimation:
-		action_res.resource_name += "_anim"
-		anim_action_transcribe.call(action_node)
-		
-	elif action_node is PlaywrightActionCamSwitch:
-		action_res.resource_name += "_cam"
-		cam_switch_action_transcribe.call(action_node)
-		
-	elif action_node is PlaywrightActionTimer:
-		action_res.resource_name += "_tmr"
-		timer_action_transcribe.call(action_node)
-		
-	elif action_node is PlaywrightActionCallable:
-		action_res.resource_name += "_call"
-		callable_action_transcribe.call(action_node)
-		
-	elif action_node is PlaywrightActionDialogue:
-		action_res.resource_name += "_dlg"
-		dialogue_action_transcribe.call(action_node)
-	
-	return action_res
-
-func save_event_res_to_disk(event_res: Event, res_name: String):
-	var event_filename: String = res_name + ".tres"
-	export_event_file_dialog.current_path = event_filename
-	
-	var confirmed_func: Callable = func():
-		var save_result: Error = ResourceSaver.save(event_res, export_event_file_dialog.current_path)
-		
-		if save_result != OK:
-			print(save_result)
-		else:
-			# there isn't an easy fix for immediate resource updating upon overwrite, see: https://github.com/godotengine/godot/issues/30302
-			# but, relaunching the editor or sometimes clicking around a bit afterwards does the job.
-			fs.update_file(export_event_file_dialog.current_path)
-			print("File saved!")
-		
-		flush_file_dlg_signals(export_event_file_dialog, ["confirmed", "canceled"])
-		file_operation_complete.emit()
-	
-	var canceled_func: Callable = func():
-		print("File save aborted.")
-		
-		flush_file_dlg_signals(export_event_file_dialog, ["confirmed", "canceled"])
-		file_operation_complete.emit()
-	
-	export_event_file_dialog.confirmed.connect(confirmed_func)
-	export_event_file_dialog.canceled.connect(canceled_func)
-	
-	export_event_file_dialog.visible = true
-
-func _on_import_event_button_pressed():
-	import_event_file_dialog.visible = true
-
-func import_event_file(file_path: String) -> void:
-	action_offset_x = 0
-	var event_res: Event = load(file_path)
-	
-	event_name_line_edit.text = event_res.resource_name
-	deserialize_event(event_res)
-
-func deserialize_event(event_res: Event) -> void:
-	for action: Action in event_res.actions:
-		var type_idx: int = determine_action_type(action)
-		
-		var action_node_inst: GraphNode = instantiate_action_node(type_idx)
-		instantiate_nested_actions(action, type_idx)
-		populate_action_node(action_node_inst, type_idx)
-		action_node_inst.position_offset.x += action_offset_x
-		action_offset_x += ACTION_OFFSET_INCREMENT_X
-	
-	# TODO: rewire action node connections once they have been instantiated and transcribed.
-	if action_nodes.size() > 1:
-		pass
-
-# TODO: transcribe action resource data back into respective action nodes
-func populate_action_node(action_node: GraphNode, type_idx: int) -> void:
-	match type_idx:
-		0: # anim
-			pass
-		1: # cam switch
-			pass
-		2: # timer
-			pass
-		3: # callable
-			pass
-		4: # dialogue
-			pass
-		5: # array actions
-			pass
-		6: # parallel actions
-			pass
-		7: # sub-actions
-			pass
-
-func determine_action_type(action: Action) -> int:
-	var type_idx: int
-	if action.resource_name.contains("_anim"):
-		type_idx = 0
-	elif action.resource_name.contains("_cam"):
-		type_idx = 1
-	elif action.resource_name.contains("_tmr"):
-		type_idx = 4
-	elif action.resource_name.contains("_call"):
-		type_idx = 2
-	elif action.resource_name.contains("_dlg"):
-		type_idx = 3
-	elif action.resource_name.contains("_arr"):
-		type_idx = 7
-	elif action.resource_name.contains("_par"):
-		type_idx = 6
-	elif action.resource_name.contains("_sub"):
-		type_idx = 5
-	else:
-		print("No action tag found in resource_name, defaulting to 0.")
-		type_idx = 0
-	return type_idx
-
-func instantiate_nested_actions(action: Action, type_idx: int) -> void:
-	match type_idx:
-		5: # sub-action
-			for action_context in action.action.values():
-				if action_context is Array:
-					for sub_action: Action in action_context:
-						var sub_type_idx: int = determine_action_type(sub_action)
-						var sub_action_node_inst: GraphNode = instantiate_action_node(sub_type_idx)
-						instantiate_nested_actions(sub_action, sub_type_idx)
-						populate_action_node(sub_action_node_inst, sub_type_idx)
-						sub_action_node_inst.position_offset.x += action_offset_x - (ACTION_OFFSET_INCREMENT_X * 0.5)
-						sub_action_node_inst.position_offset.y += ACTION_OFFSET_INCREMENT_Y 
-		6: # parallel action
-			# TODO: parallel action node deserialization
-			for action_type in action.action.keys():
-				pass
-		7: # array action
-			# TODO: array action node deserialization
-			for action_type in action.action.keys():
-				if action_type is Array:
-					pass
-
-func _on_playwright_graph2_connection_request(from_node: StringName, from_port: int, to_node: StringName, to_port: int):
-	playwright_graph2.connect_node(from_node,from_port,	to_node, to_port)
-
-func _on_playwright_graph2_disconnection_request(from_node: StringName, from_port: int, to_node: StringName, to_port: int):
-	playwright_graph2.disconnect_node(from_node, from_port, to_node, to_port)
-
-func _on_delete_action_node(action_node: PlaywrightAction) -> void:
-	var action_connection_list: Array[Dictionary] = playwright_graph2.get_connection_list()
-	
-	action_nodes.erase(action_node)
-	
-	if !action_connection_list.is_empty():
-		for connection: Dictionary in action_connection_list:
-			if connection["from_node"] == action_node.name || connection["to_node"] == action_node.name:
-				playwright_graph2.disconnect_node(connection["from_node"], connection["from_port"], connection["to_node"], connection["to_port"])
-			
-			action_node.queue_free()
-	else:
-		action_node.queue_free()
-#endregion
 
 #region dialogue editor code
 func _on_add_dialogue_button_pressed():
