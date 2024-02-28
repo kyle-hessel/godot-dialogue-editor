@@ -14,7 +14,6 @@ signal delete_node(node: GraphNode)
 
 var dialogue_options: Array[TextEdit]
 
-var dialogue_type: Dialogue.DialogueType = Dialogue.DialogueType.DEFAULT # TODO: Remove this, I think?
 var slot_index: int = 2
 
 func _ready():
@@ -32,7 +31,6 @@ func _unhandled_input(event: InputEvent):
 				delete_node.emit(self)
 
 func _on_dialogue_type_option_button_item_selected(index: int):
-	dialogue_type = index
 	match index:
 		0:
 			add_line_button.text = "Add Line"

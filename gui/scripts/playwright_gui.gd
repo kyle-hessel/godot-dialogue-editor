@@ -3,7 +3,7 @@
 extends Control
 
 #region CONSTANTS
-const PlaywrightDialogue: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_dialogue.tscn")
+const PlaywrightDialogueScene: PackedScene = preload("res://addons/playwright/gui/scenes/playwright_dialogue.tscn")
 const DLG_OFFSET_INCREMENT_X: int = 300
 const DLG_OFFSET_INCREMENT_Y: int = 500
 const DLG_TYPE_DEFAULT: int = 0
@@ -31,7 +31,7 @@ signal file_operation_complete
 var dialogue_edit_controls: Array
 
 var dialogue_nodes: Array[GraphNode]
-var generated_dialogues: Array[Dialogue]
+var generated_dialogues: Array[PlaywrightDialogue]
 var selected_files: Array
 
 var dlg_offset_x: int = 0
@@ -86,7 +86,7 @@ func _on_playwright_graph_connection_to_empty(from_node: StringName, from_port: 
 		playwright_graph.connection_request.emit(from_node, 0, StringName(dlg_node_inst.name), 0)
 
 func instantiate_dialogue_node() -> GraphNode:
-	var playwright_dialogue_inst: GraphNode = PlaywrightDialogue.instantiate()
+	var playwright_dialogue_inst: GraphNode = PlaywrightDialogueScene.instantiate()
 	playwright_graph.add_child(playwright_dialogue_inst)
 	dialogue_nodes.append(playwright_dialogue_inst)
 	dlg_name_increment += 1
@@ -100,10 +100,10 @@ func import_dialogue_files(file_paths: Array) -> void:
 	# import every dialogue file that was selected.
 	for file_path: String in file_paths:
 		dlg_offset_x = 0
-		var dlg_res: Dialogue = load(file_path)
+		var dlg_res: PlaywrightDialogue = load(file_path)
 		# Take the loaded dialogue resource and use it to make parallel arrays of dialogue nodes and resources.
 		var dlg_node_array: Array[GraphNode]
-		var dlg_res_array: Array[Dialogue]
+		var dlg_res_array: Array[PlaywrightDialogue]
 		
 		dialogue_name_line_edit.text = dlg_res.resource_name
 		deserialize_dialogue(dlg_res, dlg_node_array, dlg_res_array)
@@ -177,7 +177,7 @@ func import_dialogue_files(file_paths: Array) -> void:
 		
 		dlg_offset_y += DLG_OFFSET_INCREMENT_Y
 
-func deserialize_dialogue(dlg_res: Dialogue, out_node_array: Array[GraphNode], out_res_array: Array[Dialogue]) -> void:
+func deserialize_dialogue(dlg_res: PlaywrightDialogue, out_node_array: Array[GraphNode], out_res_array: Array[PlaywrightDialogue]) -> void:
 	var dlg_node_inst: GraphNode = instantiate_dialogue_node()
 	if out_node_array.is_empty():
 		dlg_node_inst.title = dialogue_name_line_edit.text
@@ -197,7 +197,7 @@ func deserialize_dialogue(dlg_res: Dialogue, out_node_array: Array[GraphNode], o
 	dlg_node_inst.speaker_line_edit.text = dlg_res.speaker
 	dlg_node_inst.dialogue_type_button.selected = dlg_res.dialogue_type
 	
-	if dlg_res.dialogue_type == Dialogue.DialogueType.DEFAULT:
+	if dlg_res.dialogue_type == PlaywrightDialogue.DEFAULT:
 		# determine how many TextEdits are needed for default dialogue data and instantiate them.
 		var boxes_needed: int = dlg_res.dialogue_options.size() - 1
 		for num: int in boxes_needed:
@@ -213,7 +213,7 @@ func deserialize_dialogue(dlg_res: Dialogue, out_node_array: Array[GraphNode], o
 				else:
 					dlg_line.text += dlg_res_lines[dlg_line_num]
 		
-	elif dlg_res.dialogue_type == Dialogue.DialogueType.RESPONSE:
+	elif dlg_res.dialogue_type == PlaywrightDialogue.RESPONSE:
 		# determine how many TextEdits are needed for response dialogue data and instantiate them.
 		var boxes_needed: int = 0
 		for dlg_option in dlg_res.dialogue_options:
@@ -245,7 +245,7 @@ func _on_serialize_dialogue_button_pressed():
 		var sorted_dialogue_node_names: Array[String] = sort_dialogue_nodes(dialogue_connection_list)
 		
 		# use dialogue node name data to fetch the nodes themselves and transcribe them into an array of dialogue resources.
-		var dlg_res_array: Array[Dialogue]
+		var dlg_res_array: Array[PlaywrightDialogue]
 		var last_node_name: String = ""
 		var next_node: GraphNode
 		
@@ -257,20 +257,20 @@ func _on_serialize_dialogue_button_pressed():
 				next_node = get_node(NodePath("PlaywrightGraph/" + sorted_dialogue_node_names[node_name_pos + 1]))
 			else: 
 				next_node = null
-			var dlg: Dialogue = transcribe_dialogue_node_to_resource(dlg_node, last_node_name, next_node, dialogue_line_connections)
+			var dlg: PlaywrightDialogue = transcribe_dialogue_node_to_resource(dlg_node, last_node_name, next_node, dialogue_line_connections)
 			dlg_res_array.append(dlg)
 			last_node_name = dlg_node.name
 		
 		# chain each dialogue to the next dialogue in its array, unless its the last element. this is a linked list!
 		for dlg_pos: int in dlg_res_array.size():
 			if dlg_pos < dlg_res_array.size() - 1:
-				var dlg_to_chain: Dialogue = dlg_res_array[dlg_pos]
+				var dlg_to_chain: PlaywrightDialogue = dlg_res_array[dlg_pos]
 				dlg_to_chain.next_dialogue = dlg_res_array[dlg_pos + 1]
 				print("dlg: " + str(dlg_to_chain) + ", next dlg: " + str(dlg_to_chain.next_dialogue))
 			
 			# FIXME: this is for debugging, comment it out later or remove it.
 			else:
-				var dlg_to_chain: Dialogue = dlg_res_array[dlg_pos]
+				var dlg_to_chain: PlaywrightDialogue = dlg_res_array[dlg_pos]
 				print("dlg: " + str(dlg_to_chain) + ", end of list.")
 		
 		# save the first resource in the array to disk as a .tres. each resource afterwards is a nested subresource,
@@ -295,7 +295,7 @@ func _on_serialize_dialogue_button_pressed():
 		serialize_unconnected_dlg_nodes(dialogue_nodes)
 
 func serialize_unconnected_dlg_nodes(dlg_node_array: Array[GraphNode]) -> void:
-	var dlg_res_array: Array[Dialogue]
+	var dlg_res_array: Array[PlaywrightDialogue]
 	for dlg_node: GraphNode in dlg_node_array:
 		var dlg: Resource = transcribe_dialogue_node_to_resource(dlg_node)
 		dlg_res_array.append(dlg)
@@ -307,7 +307,7 @@ func serialize_unconnected_dlg_nodes(dlg_node_array: Array[GraphNode]) -> void:
 		save_dialogue_res_to_disk(dlg, res_name)
 		await file_operation_complete
 
-func save_dialogue_res_to_disk(dlg_res: Dialogue, res_name: String):
+func save_dialogue_res_to_disk(dlg_res: PlaywrightDialogue, res_name: String):
 	recursive_sub_dlg_res_rename(dlg_res, res_name) # renames the resource_name for this dialogue and any nested ones. good for clarity in resource data, especially in git.
 	var dlg_filename: String = res_name + ".tres"
 	export_dlg_file_dialog.current_path = dlg_filename
@@ -338,7 +338,7 @@ func save_dialogue_res_to_disk(dlg_res: Dialogue, res_name: String):
 	
 	export_dlg_file_dialog.visible = true
 
-func recursive_sub_dlg_res_rename(dlg_res: Dialogue, res_name: String, counter: int = 0) -> void:
+func recursive_sub_dlg_res_rename(dlg_res: PlaywrightDialogue, res_name: String, counter: int = 0) -> void:
 	if counter == 0:
 		dlg_res.resource_name = res_name
 	else:
@@ -423,13 +423,13 @@ func traverse_node_connection_array(connections_array: Array[Dictionary], sorted
 	else:
 		return sorted_node_names
 
-func transcribe_dialogue_node_to_resource(dlg_node: GraphNode, last_node_name: String = "", next_node: GraphNode = null, dlg_line_connections: Array[Dictionary] = []) -> Dialogue:
-	var dialogue_res: Dialogue = Dialogue.new()
+func transcribe_dialogue_node_to_resource(dlg_node: GraphNode, last_node_name: String = "", next_node: GraphNode = null, dlg_line_connections: Array[Dictionary] = []) -> PlaywrightDialogue:
+	var dialogue_res: PlaywrightDialogue = PlaywrightDialogue.new()
 	# fill the obvious fields first - speaker and dialogue type.
 	dialogue_res.speaker = dlg_node.speaker_line_edit.text
 	dialogue_res.dialogue_type = dlg_node.dialogue_type_button.selected
 	
-	if dialogue_res.dialogue_type == Dialogue.DialogueType.DEFAULT:
+	if dialogue_res.dialogue_type == PlaywrightDialogue.DEFAULT:
 		# loop through each dialogue box on the node
 		for dlg_lines_pos: int in dlg_node.dialogue_options.size():
 			var lines: Array[String]
@@ -443,7 +443,7 @@ func transcribe_dialogue_node_to_resource(dlg_node: GraphNode, last_node_name: S
 			
 			dialogue_res.dialogue_options.append(lines)
 	
-	elif dialogue_res.dialogue_type == Dialogue.DialogueType.RESPONSE:
+	elif dialogue_res.dialogue_type == PlaywrightDialogue.RESPONSE:
 		if dlg_node.dialogue_options.size() == 1:
 			var responses: Array[String]
 			responses.append(dlg_node.dialogue_options[0].text)
